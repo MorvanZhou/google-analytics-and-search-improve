@@ -3,103 +3,103 @@ name: google-analytics-and-search-improve
 description: Analyze website data via Google Search Console API and GA4 Data API, audit live site with browser automation, review project source code, and generate data-driven improvement plans covering SEO, performance, content strategy, UX, conversion rate, and technical issues. Use when user wants to diagnose website problems, improve search rankings, optimize traffic, analyze Google Analytics or Search Console data, audit website performance, or create a data-backed improvement roadmap.
 ---
 
-# Google Analytics & Search Console 数据分析改进
+# Google Analytics & Search Console Data-Driven Improvement
 
-通过 GSC 和 GA4 数据，结合浏览器审计和源代码分析，生成覆盖六大维度（SEO、性能、内容策略、UX、转化率、技术问题）的改进方案。
+Analyze GSC and GA4 data, combined with browser auditing and source code review, to generate improvement plans covering six dimensions: SEO, Performance, Content Strategy, UX, Conversion Rate, and Technical Issues.
 
-## 数据存储
+## Data Storage
 
-所有运行时数据存放在 `$DATA_DIR`，与技能代码分离。
+All runtime data is stored in `$DATA_DIR`, separated from skill code.
 
 ```
 <project_root>/.skills-data/google-analytics-and-search-improve/
-  .env        # 配置（认证、URL 等），脚本自动加载
-  data/       # GSC/GA4/PSI 数据（JSON 或 CSV）
-  tmp/        # 截图等临时文件
-  cache/      # API 响应缓存
-  logs/       # 执行日志
-  venv/       # Python 虚拟环境
+  .env        # Configuration (auth, URLs, etc.), auto-loaded by scripts
+  data/       # GSC/GA4/PSI data (JSON or CSV)
+  tmp/        # Screenshots and temporary files
+  cache/      # API response cache
+  logs/       # Execution logs
+  venv/       # Python virtual environment
 ```
 
-## 工作流
+## Workflow
 
 ```
-分析进度:
-- [ ] Phase 1: 选择数据来源 & 采集数据
-- [ ] Phase 2: GSC 数据分析
-- [ ] Phase 3: GA4 数据分析
-- [ ] Phase 4: 网站实际审计
-- [ ] Phase 5: 源代码分析
-- [ ] Phase 6: 生成改进报告
+Analysis Progress:
+- [ ] Phase 1: Select data source & collect data
+- [ ] Phase 2: GSC data analysis
+- [ ] Phase 3: GA4 data analysis
+- [ ] Phase 4: Live site audit
+- [ ] Phase 5: Source code review
+- [ ] Phase 6: Generate improvement report
 ```
 
 ---
 
-### Phase 1: 选择数据来源 & 采集数据
+### Phase 1: Select Data Source & Collect Data
 
-**1a. 初始化目录**:
+**1a. Initialize directories**:
 ```bash
 DATA_DIR=".skills-data/google-analytics-and-search-improve"
 mkdir -p "$DATA_DIR"/{data,cache,logs,tmp}
 ```
 
-**1b. 询问用户选择数据来源**:
+**1b. Ask user to choose data source**:
 
-向用户提供三种模式，让用户选择：
+Present three modes for the user to choose from:
 
-> 请选择 GSC/GA4 数据的获取方式：
+> Choose how to obtain GSC/GA4 data:
 >
-> **A. API 自动采集**（推荐，数据最全）
-> 需要在 Google Cloud 创建 Service Account 并配置 API 认证。首次配置约 10 分钟，之后每次分析可自动采集。
+> **A. API auto-collection** (recommended, most complete data)
+> Requires creating a Google Cloud Service Account and configuring API auth. First-time setup takes ~10 minutes; subsequent analyses collect data automatically.
 >
-> **B. 手动导出 CSV**（零配置，最简单）
-> 你自己从 GA4 和 GSC 网页后台导出数据文件，我来分析。不需要任何 API 配置。
+> **B. Manual CSV export** (zero config, simplest)
+> You export data files from GA4 and GSC web consoles yourself, and I'll analyze them. No API configuration needed.
 >
-> **C. 仅浏览器审计**（无需 GA4/GSC 数据）
-> 我直接访问网站做技术审计和代码分析，不使用 GA4/GSC 数据。适合快速检查技术问题。
+> **C. Browser audit only** (no GA4/GSC data needed)
+> I'll visit the site directly for technical auditing and code analysis without using GA4/GSC data. Best for quick technical checks.
 
-根据用户选择进入对应分支：
+Enter the corresponding branch based on user selection:
 
 ---
 
-#### 模式 A：API 自动采集
+#### Mode A: API Auto-Collection
 
-**检查 .env**：读取 `$DATA_DIR/.env`，如果缺少配置则引导用户填写。
+**Check .env**: Read `$DATA_DIR/.env`; if missing config, guide the user to fill it in.
 
-需要用户提供的配置（收集后写入 `$DATA_DIR/.env`）：
+Configuration required from user (write to `$DATA_DIR/.env` after collection):
 
-| 变量名 | 说明 |
-|--------|------|
-| `SITE_URL` | 要审计的网站 URL（如 `https://example.com`） |
-| `GOOGLE_APPLICATION_CREDENTIALS` | Service Account JSON 密钥文件在本机的**绝对路径** |
-| `GSC_SITE_URL` | Search Console 中的网站地址（见下方格式说明） |
-| `GA4_PROPERTY_ID` | GA4 Property ID（纯数字） |
-| `SOURCE_CODE_PATH` | （可选）项目源代码路径 |
-| `PSI_API_KEY` | （可选）PageSpeed Insights API Key，避免限流 |
+| Variable | Description |
+|----------|-------------|
+| `SITE_URL` | Website URL to audit (e.g., `https://example.com`) |
+| `GOOGLE_APPLICATION_CREDENTIALS` | **Absolute path** to the Service Account JSON key file on your machine |
+| `GSC_SITE_URL` | Site address in Search Console (see format note below) |
+| `GA4_PROPERTY_ID` | GA4 Property ID (numeric only) |
+| `SOURCE_CODE_PATH` | (Optional) Path to the project source code |
+| `PSI_API_KEY` | (Optional) PageSpeed Insights API Key to avoid rate limiting |
 
-**GSC_SITE_URL 格式说明**：GSC 有两种网站资源类型，格式不同，必须与用户在 GSC 中注册的类型一致，否则会返回 403 权限错误：
+**GSC_SITE_URL format note**: GSC has two property types with different formats. The value must match the type registered in GSC, otherwise a 403 permission error will be returned:
 
-| GSC 资源类型 | GSC_SITE_URL 格式 | 示例 |
-|-------------|-------------------|------|
-| **网域资源** (Domain property) | `sc-domain:域名` | `sc-domain:example.com` |
-| **网址前缀资源** (URL-prefix property) | 完整 URL | `https://example.com` |
+| GSC Property Type | GSC_SITE_URL Format | Example |
+|-------------------|---------------------|---------|
+| **Domain property** | `sc-domain:domain` | `sc-domain:example.com` |
+| **URL-prefix property** | Full URL | `https://example.com` |
 
-> 如何确认：在 [Search Console](https://search.google.com/search-console/) 左上角的网站选择器中查看，如果显示的是纯域名则为网域资源（使用 `sc-domain:` 前缀），如果显示完整 URL 则为网址前缀资源。
+> How to check: In the [Search Console](https://search.google.com/search-console/) property selector (top-left), if it shows a bare domain name it's a Domain property (use `sc-domain:` prefix); if it shows a full URL it's a URL-prefix property.
 
-认证创建详细步骤见 [references/gsc-api-guide.md](references/gsc-api-guide.md)（含截图级指引）。
+Detailed auth setup steps in [references/gsc-api-guide.md](references/gsc-api-guide.md).
 
 ```bash
 cat > "$DATA_DIR/.env" <<EOF
-SITE_URL=用户提供
-GOOGLE_APPLICATION_CREDENTIALS=用户提供（绝对路径）
-GSC_SITE_URL=用户提供（注意 sc-domain: 或 https:// 格式）
-GA4_PROPERTY_ID=用户提供
-SOURCE_CODE_PATH=用户提供
+SITE_URL=provided by user
+GOOGLE_APPLICATION_CREDENTIALS=provided by user (absolute path)
+GSC_SITE_URL=provided by user (note sc-domain: or https:// format)
+GA4_PROPERTY_ID=provided by user
+SOURCE_CODE_PATH=provided by user
 PSI_API_KEY=
 EOF
 ```
 
-**采集数据**（脚本自动从 .env 读取认证）:
+**Collect data** (scripts auto-read auth from .env):
 ```bash
 set -a; source "$DATA_DIR/.env"; set +a
 python scripts/gsc_query.py --dimensions query --limit 500 -o "$DATA_DIR/data/gsc_queries.json"
@@ -116,90 +116,90 @@ python scripts/ga4_query.py --preset user_behavior --limit 100 -o "$DATA_DIR/dat
 python scripts/ga4_query.py --preset conversion_events -o "$DATA_DIR/data/ga4_conversions.json"
 ```
 
-首次使用需安装依赖：
+First-time use requires installing dependencies:
 ```bash
 python3 -m venv "$DATA_DIR/venv" && source "$DATA_DIR/venv/bin/activate"
 pip install -r scripts/requirements.txt
 ```
 
-脚本用法详见 [references/gsc-api-guide.md](references/gsc-api-guide.md) 和 [references/ga4-api-guide.md](references/ga4-api-guide.md)。
+Script usage details in [references/gsc-api-guide.md](references/gsc-api-guide.md) and [references/ga4-api-guide.md](references/ga4-api-guide.md).
 
 ---
 
-#### 模式 B：手动导出 CSV
+#### Mode B: Manual CSV Export
 
-向用户发送以下导出指引，请用户将文件放到 `$DATA_DIR/data/` 下：
+Send the following export instructions to the user, asking them to place files in `$DATA_DIR/data/`:
 
-> **导出 GSC 数据**：
-> 1. 打开 [Google Search Console](https://search.google.com/search-console/) → 选择你的网站
-> 2. 左侧点「搜索结果」（效果）
-> 3. 日期范围选最近 3 个月，点「导出」→ 选「下载 CSV」
-> 4. 将下载的 CSV 文件保存为 `$DATA_DIR/data/gsc_export.csv`
+> **Export GSC data**:
+> 1. Open [Google Search Console](https://search.google.com/search-console/) → Select your site
+> 2. Click "Search results" (Performance) in the left menu
+> 3. Set date range to last 3 months, click "Export" → "Download CSV"
+> 4. Save the downloaded CSV as `$DATA_DIR/data/gsc_export.csv`
 >
-> **导出 GA4 数据（需要导出以下几份报告）**：
-> 1. 打开 [Google Analytics](https://analytics.google.com/) → 选择你的媒体资源
-> 2. 导出「页面和屏幕」报告：
->    - 左侧「报告」→「互动度」→「页面和屏幕」
->    - 右上角点分享图标 → 「下载文件」→ CSV
->    - 保存为 `$DATA_DIR/data/ga4_pages.csv`
-> 3. 导出「流量获取」报告：
->    - 左侧「报告」→「流量获取」→「流量获取概览」
->    - 同样导出 CSV → 保存为 `$DATA_DIR/data/ga4_acquisition.csv`
-> 4. 导出「着陆页」报告：
->    - 左侧「报告」→「互动度」→「着陆页」
->    - 同样导出 CSV → 保存为 `$DATA_DIR/data/ga4_landing.csv`
+> **Export GA4 data (export the following reports)**:
+> 1. Open [Google Analytics](https://analytics.google.com/) → Select your property
+> 2. Export "Pages and screens" report:
+>    - Left menu: "Reports" → "Engagement" → "Pages and screens"
+>    - Click the share icon (top-right) → "Download file" → CSV
+>    - Save as `$DATA_DIR/data/ga4_pages.csv`
+> 3. Export "Traffic acquisition" report:
+>    - Left menu: "Reports" → "Acquisition" → "Traffic acquisition"
+>    - Export CSV → Save as `$DATA_DIR/data/ga4_acquisition.csv`
+> 4. Export "Landing pages" report:
+>    - Left menu: "Reports" → "Engagement" → "Landing pages"
+>    - Export CSV → Save as `$DATA_DIR/data/ga4_landing.csv`
 >
-> 导出完成后告诉我，我会读取这些文件开始分析。
+> Let me know when the export is complete, and I'll read the files to start analysis.
 
-同时询问用户：
-- **目标网站 URL**（必需，写入 `$DATA_DIR/.env` 的 `SITE_URL`）
-- **源代码路径**（可选，写入 `SOURCE_CODE_PATH`）
+Also ask the user for:
+- **Target website URL** (required, write to `SITE_URL` in `$DATA_DIR/.env`)
+- **Source code path** (optional, write to `SOURCE_CODE_PATH`)
 
-收到文件后读取 `$DATA_DIR/data/` 下的 CSV 文件，解析后进入 Phase 2-3 分析。
-
----
-
-#### 模式 C：仅浏览器审计
-
-只需询问用户：
-- **目标网站 URL**（必需）
-- **源代码路径**（可选）
-
-写入 `$DATA_DIR/.env` 后直接跳到 Phase 4（网站审计）和 Phase 5（源代码分析），跳过 Phase 2-3。
+After receiving files, read CSV files from `$DATA_DIR/data/` and proceed to Phase 2-3 analysis.
 
 ---
 
-### Phase 2: GSC 数据分析
+#### Mode C: Browser Audit Only
 
-读取 `$DATA_DIR/data/` 下的 GSC 数据（JSON 或 CSV），按 [references/metrics-glossary.md](references/metrics-glossary.md) 中「SEO 优化」维度的阈值分析。
+Only ask the user for:
+- **Target website URL** (required)
+- **Source code path** (optional)
 
-重点输出：
-- 高展示低 CTR 关键词（优化标题/描述的最佳目标）
-- 排名 4-10 的关键词（推至前 3 的 ROI 最高）
-- 排名下降趋势页面
-- 索引覆盖率和 sitemap 健康状态
-
-**输出**: Top 10 SEO 优化机会，附带数据支撑。
+Write to `$DATA_DIR/.env` and skip directly to Phase 4 (site audit) and Phase 5 (source code review), skipping Phase 2-3.
 
 ---
 
-### Phase 3: GA4 数据分析
+### Phase 2: GSC Data Analysis
 
-读取 `$DATA_DIR/data/` 下的 GA4 数据（JSON 或 CSV），按 [references/metrics-glossary.md](references/metrics-glossary.md) 中「内容策略」「用户体验」「转化率优化」维度的阈值分析。
+Read GSC data (JSON or CSV) from `$DATA_DIR/data/`, analyze according to the "SEO" dimension thresholds in [references/metrics-glossary.md](references/metrics-glossary.md).
 
-重点输出：
-- 流量趋势和来源渠道效果
-- 高流量低互动 / 高跳出率页面
-- 移动端 vs 桌面端体验差异
-- 转化漏斗断点
+Key outputs:
+- High-impression low-CTR keywords (best targets for title/description optimization)
+- Keywords ranked 4-10 (highest ROI to push into top 3)
+- Pages with declining ranking trends
+- Index coverage and sitemap health status
 
-**输出**: Top 10 GA4 洞察发现，附带数据支撑。
+**Output**: Top 10 SEO optimization opportunities with data evidence.
 
 ---
 
-### Phase 4: 网站实际审计
+### Phase 3: GA4 Data Analysis
 
-使用 `agent-browser` 访问 `$SITE_URL`：
+Read GA4 data (JSON or CSV) from `$DATA_DIR/data/`, analyze according to "Content Strategy", "User Experience", and "Conversion Rate" dimension thresholds in [references/metrics-glossary.md](references/metrics-glossary.md).
+
+Key outputs:
+- Traffic trends and channel effectiveness
+- High-traffic low-engagement / high-bounce-rate pages
+- Mobile vs desktop experience gaps
+- Conversion funnel drop-off points
+
+**Output**: Top 10 GA4 insights with data evidence.
+
+---
+
+### Phase 4: Live Site Audit
+
+Use `agent-browser` to visit `$SITE_URL`:
 
 ```bash
 agent-browser open "$SITE_URL" && agent-browser wait --load networkidle
@@ -209,9 +209,9 @@ agent-browser screenshot --full homepage_mobile.png
 agent-browser set viewport 1280 720
 ```
 
-截图保存到 `$DATA_DIR/tmp/`。
+Save screenshots to `$DATA_DIR/tmp/`.
 
-PageSpeed Insights 性能审计（如 .env 中有 `PSI_API_KEY` 会自动附加）:
+PageSpeed Insights performance audit (auto-appends `PSI_API_KEY` from .env if present):
 ```bash
 PSI_BASE="https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=$SITE_URL&category=PERFORMANCE&category=SEO&category=ACCESSIBILITY&category=BEST_PRACTICES"
 PSI_KEY_PARAM="${PSI_API_KEY:+&key=$PSI_API_KEY}"
@@ -219,13 +219,13 @@ curl -s "${PSI_BASE}&strategy=mobile${PSI_KEY_PARAM}" > "$DATA_DIR/data/psi_mobi
 curl -s "${PSI_BASE}&strategy=desktop${PSI_KEY_PARAM}" > "$DATA_DIR/data/psi_desktop.json"
 ```
 
-> **PSI 失败降级**：如果返回 429（配额不足）或其他错误，检查是否在 Google Cloud 项目中启用了 "PageSpeed Insights API"（见 [references/gsc-api-guide.md](references/gsc-api-guide.md) 第一步）。PSI 数据缺失时，继续执行后续阶段，在报告中注明性能数据缺失。
+> **PSI failure fallback**: If a 429 (quota exceeded) or other error is returned, check whether "PageSpeed Insights API" has been enabled in the Google Cloud project (see [references/gsc-api-guide.md](references/gsc-api-guide.md) Step 1). When PSI data is missing, continue with subsequent phases and note the missing performance data in the report.
 
-从 PSI 提取 Core Web Vitals，阈值参考 [references/metrics-glossary.md](references/metrics-glossary.md) 中「网站性能」维度。
+Extract Core Web Vitals from PSI; thresholds in the "Performance" dimension of [references/metrics-glossary.md](references/metrics-glossary.md).
 
-如有 GA4 数据，针对 Top 10 着陆页逐一截图（桌面+移动），记录视觉和交互问题。
+If GA4 data is available, take screenshots (desktop + mobile) for each of the Top 10 landing pages, recording visual and interaction issues.
 
-无源代码时，通过浏览器提取前端元数据：
+When no source code is available, extract front-end metadata via browser:
 ```bash
 agent-browser eval --stdin <<'EVALEOF'
 JSON.stringify({
@@ -240,74 +240,74 @@ JSON.stringify({
 EVALEOF
 ```
 
-**输出**: 性能评分 + 视觉问题清单。
+**Output**: Performance scores + visual issue checklist.
 
 ---
 
-### Phase 5: 源代码分析
+### Phase 5: Source Code Review
 
-如果 `.env` 中配置了 `SOURCE_CODE_PATH`，分析项目源代码。无源代码则跳过。
+If `SOURCE_CODE_PATH` is configured in `.env`, analyze project source code. Skip if no source code is available.
 
-检查项详见 [references/metrics-glossary.md](references/metrics-glossary.md) 中「技术问题」检查清单。核心关注：
+Check items detailed in the "Technical Issues" checklist in [references/metrics-glossary.md](references/metrics-glossary.md). Core focus:
 
-- **SEO**: meta 标签完整性、JSON-LD、robots.txt / sitemap.xml、图片 alt、H1 规范
-- **性能**: JS/CSS 分割和懒加载、图片格式和响应式、第三方脚本、render-blocking 资源
-- **技术**: `<html lang>`、viewport、HTTPS、canonical URL、内部死链
+- **SEO**: Meta tag completeness, JSON-LD, robots.txt / sitemap.xml, image alt, H1 conventions
+- **Performance**: JS/CSS splitting and lazy loading, image formats and responsive images, third-party scripts, render-blocking resources
+- **Technical**: `<html lang>`, viewport, HTTPS, canonical URL, internal dead links
 
-**输出**: 代码级改进点清单。
+**Output**: Code-level improvement checklist.
 
 ---
 
-### Phase 6: 生成改进报告
+### Phase 6: Generate Improvement Report
 
-按 [references/metrics-glossary.md](references/metrics-glossary.md) 中「优先级矩阵」(P0-P3) 组织输出。使用以下模板：
+Organize output according to the "Priority Matrix" (P0-P3) in [references/metrics-glossary.md](references/metrics-glossary.md). Use the following template:
 
 ```markdown
-# 网站数据分析与改进方案
+# Website Data Analysis & Improvement Plan
 
-## 概要
-- **目标网站**: [URL]
-- **数据来源**: API 自动采集 / 手动导出 CSV / 仅浏览器审计
-- **分析时间范围**: [start_date] ~ [end_date]
-- **总结**: [1-2 句核心发现]
+## Summary
+- **Target Website**: [URL]
+- **Data Source**: API auto-collection / Manual CSV export / Browser audit only
+- **Analysis Period**: [start_date] ~ [end_date]
+- **Key Findings**: [1-2 sentence summary]
 
-## 数据概览
-| 指标 | 当前值 | 趋势 |
-|------|--------|------|
-| GSC 总展示量 / 点击量 / CTR / 排名 | ... | ... |
-| GA4 会话数 / 用户数 / 跳出率 / 互动率 | ... | ... |
-| PSI 性能评分 (Mobile/Desktop) | ... | ... |
+## Data Overview
+| Metric | Current Value | Trend |
+|--------|---------------|-------|
+| GSC Total Impressions / Clicks / CTR / Position | ... | ... |
+| GA4 Sessions / Users / Bounce Rate / Engagement Rate | ... | ... |
+| PSI Performance Score (Mobile/Desktop) | ... | ... |
 
-## 改进方案
-### P0 紧急（高影响，低难度）
-1. **[问题]** — 数据支撑 / 改进方案 / 预期效果
+## Improvement Plan
+### P0 Critical (High Impact, Low Effort)
+1. **[Issue]** — Data evidence / Fix / Expected impact
 
-### P1 高优 → P2 中优 → P3 低优
-（同上格式）
+### P1 High → P2 Medium → P3 Low
+(Same format as above)
 
-## 详细分析
-（按 SEO / 性能 / 内容策略 / 用户体验 / 转化率 / 技术问题 六个维度展开）
+## Detailed Analysis
+(Organized by SEO / Performance / Content Strategy / UX / Conversion Rate / Technical Issues)
 
-## 执行路线图
-| 阶段 | 时间 | 任务 | 预期成果 |
-|------|------|------|----------|
+## Execution Roadmap
+| Phase | Timeline | Tasks | Expected Outcome |
+|-------|----------|-------|------------------|
 | Week 1-2 | P0 | ... | ... |
 | Week 3-4 | P1 | ... | ... |
 | Month 2+ | P2-P3 | ... | ... |
 ```
 
-报告保存到 `$DATA_DIR/data/improvement-report.md`。
+Save the report to `$DATA_DIR/data/improvement-report.md`.
 
-## 协作技能
+## Companion Skills
 
-- SEO 优化实施 → `seo-geo`
-- 浏览器交互 → `agent-browser`
-- 前端改造 → `frontend-design`
+- SEO implementation → `seo-geo`
+- Browser automation → `agent-browser`
+- Frontend redesign → `frontend-design`
 
-## 参考文档
+## Reference Docs
 
-| 文档 | 内容 |
-|------|------|
-| [references/gsc-api-guide.md](references/gsc-api-guide.md) | GSC 认证配置（手把手指引）、脚本用法、维度/指标说明 |
-| [references/ga4-api-guide.md](references/ga4-api-guide.md) | GA4 认证配置、预置模板、维度/指标说明 |
-| [references/metrics-glossary.md](references/metrics-glossary.md) | 六大分析维度的阈值、诊断要点、优先级矩阵 |
+| Document | Contents |
+|----------|----------|
+| [references/gsc-api-guide.md](references/gsc-api-guide.md) | GSC auth setup (step-by-step), script usage, dimensions & metrics |
+| [references/ga4-api-guide.md](references/ga4-api-guide.md) | GA4 auth setup, preset templates, dimensions & metrics |
+| [references/metrics-glossary.md](references/metrics-glossary.md) | Six analysis dimensions: thresholds, diagnostics, priority matrix |

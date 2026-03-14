@@ -1,93 +1,93 @@
-# 关键指标与分析维度说明
+# Key Metrics & Analysis Dimensions
 
-## 六大分析维度
+## Six Analysis Dimensions
 
-### 1. SEO 优化
+### 1. SEO
 
-**核心数据源**: GSC Search Analytics
+**Primary data source**: GSC Search Analytics
 
-| 关注指标 | 健康范围 | 问题信号 |
-|----------|----------|----------|
-| 平均 CTR | > 3% (综合) | < 1% 需立即优化 |
-| 平均排名 | < 20 (前两页) | > 30 曝光价值低 |
-| 展示量趋势 | 稳步上升 | 持续下降 |
-| 索引覆盖率 | > 90% | < 70% 有结构问题 |
+| Metric | Healthy Range | Warning Signal |
+|--------|---------------|----------------|
+| Average CTR | > 3% (overall) | < 1% requires immediate optimization |
+| Average Position | < 20 (first two pages) | > 30 low exposure value |
+| Impressions Trend | Steady growth | Sustained decline |
+| Index Coverage | > 90% | < 70% structural issues |
 
-**诊断要点**:
-- 高展示低 CTR → 标题/描述需优化
-- 排名 4-10 的关键词 → 最佳优化目标（推至前 3）
-- 排名下降的页面 → 内容需更新或被竞对超越
+**Diagnostic points**:
+- High impressions, low CTR → Title/description needs optimization
+- Keywords ranked 4-10 → Best optimization targets (push into top 3)
+- Pages with declining rankings → Content needs updating or competitors overtaking
 
-### 2. 网站性能
+### 2. Performance
 
-**核心数据源**: PageSpeed Insights API + agent-browser profiling
+**Primary data source**: PageSpeed Insights API + agent-browser profiling
 
-| 指标 | 良好 | 需改进 | 差 |
-|------|------|--------|-----|
-| LCP (最大内容绘制) | < 2.5s | 2.5-4s | > 4s |
-| INP (与下次绘制的交互) | < 200ms | 200-500ms | > 500ms |
-| CLS (累积布局偏移) | < 0.1 | 0.1-0.25 | > 0.25 |
-| TTFB (首字节时间) | < 800ms | 800-1800ms | > 1800ms |
+| Metric | Good | Needs Improvement | Poor |
+|--------|------|-------------------|------|
+| LCP (Largest Contentful Paint) | < 2.5s | 2.5-4s | > 4s |
+| INP (Interaction to Next Paint) | < 200ms | 200-500ms | > 500ms |
+| CLS (Cumulative Layout Shift) | < 0.1 | 0.1-0.25 | > 0.25 |
+| TTFB (Time to First Byte) | < 800ms | 800-1800ms | > 1800ms |
 
-### 3. 内容策略
+### 3. Content Strategy
 
-**核心数据源**: GA4 top_pages + GSC search_analytics
+**Primary data source**: GA4 top_pages + GSC search_analytics
 
-**诊断要点**:
-- **高流量低互动页面**: pageViews 高但 engagementRate 低 → 内容质量不匹配用户预期
-- **高排名低流量页面**: 排名好但 clicks 低 → 标题/描述缺乏吸引力
-- **零流量内容**: 有索引但无展示 → 关键词策略失误或内容质量差
-- **内容衰减**: 流量持续下降的页面 → 需要更新或合并
+**Diagnostic points**:
+- **High-traffic low-engagement pages**: High pageViews but low engagementRate → Content quality doesn't match user expectations
+- **High-ranking low-traffic pages**: Good rankings but low clicks → Title/description lacks appeal
+- **Zero-traffic content**: Indexed but no impressions → Keyword strategy failure or poor content quality
+- **Content decay**: Pages with sustained traffic decline → Needs updating or merging
 
-### 4. 用户体验 (UX)
+### 4. User Experience (UX)
 
-**核心数据源**: GA4 user_behavior + landing_pages
+**Primary data source**: GA4 user_behavior + landing_pages
 
-| 关注指标 | 健康范围 | 问题信号 |
-|----------|----------|----------|
-| 跳出率 | < 50% | > 70% (非博客类) |
-| 互动率 | > 60% | < 40% |
-| 平均会话时长 | > 2 min | < 30s |
-| 页面深度 | > 2 | = 1 (单页退出) |
+| Metric | Healthy Range | Warning Signal |
+|--------|---------------|----------------|
+| Bounce Rate | < 50% | > 70% (non-blog sites) |
+| Engagement Rate | > 60% | < 40% |
+| Average Session Duration | > 2 min | < 30s |
+| Page Depth | > 2 | = 1 (single-page exit) |
 
-**诊断要点**:
-- 移动端跳出率远高于桌面端 → 移动端体验差
-- 特定页面跳出率异常高 → 页面内容或设计问题
-- 会话时长极短 → 页面加载慢或内容不相关
+**Diagnostic points**:
+- Mobile bounce rate much higher than desktop → Poor mobile experience
+- Specific pages with abnormally high bounce rate → Page content or design issues
+- Very short session duration → Slow page load or irrelevant content
 
-### 5. 转化率优化
+### 5. Conversion Rate Optimization
 
-**核心数据源**: GA4 conversion_events + landing_pages
+**Primary data source**: GA4 conversion_events + landing_pages
 
-**诊断要点**:
-- 着陆页转化率差异大 → A/B 测试机会
-- 高流量低转化页面 → CTA 或用户路径问题
-- 转化漏斗断点 → 用户在哪步流失
-- 设备间转化率差异 → 特定设备体验问题
+**Diagnostic points**:
+- Large conversion rate variance across landing pages → A/B testing opportunity
+- High-traffic low-conversion pages → CTA or user path issues
+- Conversion funnel drop-off points → Identify where users are lost
+- Cross-device conversion rate differences → Device-specific experience issues
 
-### 6. 技术问题
+### 6. Technical Issues
 
-**核心数据源**: GSC URL Inspect + 源代码分析 + agent-browser
+**Primary data source**: GSC URL Inspect + source code analysis + agent-browser
 
-**检查清单**:
-- [ ] robots.txt 配置正确
-- [ ] sitemap.xml 完整且可访问
-- [ ] 无 4xx/5xx 错误页面
-- [ ] 页面有正确的 meta 标签
-- [ ] 结构化数据 (JSON-LD) 无错误
-- [ ] 移动端适配 (viewport meta)
-- [ ] HTTPS 正确配置
-- [ ] 无混合内容警告
-- [ ] 图片有 alt 属性
-- [ ] 内部链接无死链
+**Checklist**:
+- [ ] robots.txt configured correctly
+- [ ] sitemap.xml complete and accessible
+- [ ] No 4xx/5xx error pages
+- [ ] Pages have correct meta tags
+- [ ] Structured data (JSON-LD) error-free
+- [ ] Mobile-friendly (viewport meta)
+- [ ] HTTPS configured correctly
+- [ ] No mixed content warnings
+- [ ] Images have alt attributes
+- [ ] No broken internal links
 
-## 优先级矩阵
+## Priority Matrix
 
-按 **影响程度** x **实施难度** 分类：
+Classified by **Impact** x **Implementation Effort**:
 
-| 优先级 | 影响 | 难度 | 典型项目 |
-|--------|------|------|----------|
-| P0 紧急 | 高 | 低 | 修复 4xx 错误、添加 meta 描述、修复索引问题 |
-| P1 高优 | 高 | 中 | 优化高展示低 CTR 页面、改善 Core Web Vitals |
-| P2 中优 | 中 | 中 | 内容更新、着陆页优化、结构化数据添加 |
-| P3 低优 | 低/中 | 高 | 大规模重构、国际化优化、新功能开发 |
+| Priority | Impact | Effort | Typical Items |
+|----------|--------|--------|---------------|
+| P0 Critical | High | Low | Fix 4xx errors, add meta descriptions, fix indexing issues |
+| P1 High | High | Medium | Optimize high-impression low-CTR pages, improve Core Web Vitals |
+| P2 Medium | Medium | Medium | Content updates, landing page optimization, add structured data |
+| P3 Low | Low/Medium | High | Large-scale refactoring, internationalization, new feature development |

@@ -1,52 +1,52 @@
-# Google Analytics 4 Data API 参考
+# Google Analytics 4 Data API Reference
 
-## 认证配置
+## Authentication Setup
 
-GA4 和 GSC 共用同一个 Service Account。如果你还没有创建，请先按照 [gsc-api-guide.md](gsc-api-guide.md) 中的「第一步 ~ 第二步」完成 Google Cloud 项目创建、API 启用和 Service Account 密钥下载（那边已经包含了 GA4 API 的启用）。
+GA4 and GSC share the same Service Account. If you haven't created one yet, first follow Steps 1-2 in [gsc-api-guide.md](gsc-api-guide.md) to create the Google Cloud project, enable APIs, and download the Service Account key (GA4 API enablement is already included there).
 
-### 在 GA4 中授权 Service Account
+### Authorize Service Account in GA4
 
-1. 打开 [Google Analytics](https://analytics.google.com/)
-2. 左下角点齿轮图标（管理）
-3. 在「属性」栏下点「属性访问管理」
-4. 点右上角「+」→ 选「添加用户」
-5. 粘贴 Service Account 邮箱（形如 `xxx@xxx.iam.gserviceaccount.com`）→ 角色选「查看者」→ 点「添加」
+1. Open [Google Analytics](https://analytics.google.com/)
+2. Click the gear icon (Admin) in the bottom-left
+3. Under "Property", click "Property Access Management"
+4. Click "+" (top-right) → "Add users"
+5. Paste the Service Account email (format: `xxx@xxx.iam.gserviceaccount.com`) → set role to "Viewer" → "Add"
 
-### 获取 GA4 Property ID
+### Get GA4 Property ID
 
-1. 在 Google Analytics 管理页面，点「属性」栏下的「属性设置」（或「属性详情」）
-2. 页面右上角会显示「属性 ID」，是一串纯数字（如 `123456789`，不含 "UA-" 前缀）
+1. In the Google Analytics Admin page, click "Property Settings" (or "Property Details") under "Property"
+2. The "Property ID" is displayed in the top-right — a numeric string (e.g., `123456789`, no "UA-" prefix)
 
-### 写入 .env
+### Write to .env
 
-将以下值写入 `$DATA_DIR/.env`（脚本会自动加载）：
+Write the following value to `$DATA_DIR/.env` (scripts will auto-load):
 
 ```
 GA4_PROPERTY_ID=123456789
 ```
 
-`GOOGLE_APPLICATION_CREDENTIALS` 在 GSC 配置时已写入，GA4 共用同一个密钥文件，无需重复填写。
+`GOOGLE_APPLICATION_CREDENTIALS` was already written during GSC configuration. GA4 shares the same key file — no need to repeat it.
 
-## 脚本用法
+## Script Usage
 
-脚本自动从 `$DATA_DIR/.env` 读取 `GOOGLE_APPLICATION_CREDENTIALS` 和 `GA4_PROPERTY_ID`，配置好 `.env` 后命令行无需重复传这些值。
+Scripts auto-read `GOOGLE_APPLICATION_CREDENTIALS` and `GA4_PROPERTY_ID` from `$DATA_DIR/.env`. Once `.env` is configured, you don't need to pass these values on the command line.
 
-### 预置查询模板
+### Preset Query Templates
 
 ```bash
-python scripts/ga4_query.py --preset traffic_overview       # 每日流量趋势
-python scripts/ga4_query.py --preset top_pages --limit 50   # 热门页面
-python scripts/ga4_query.py --preset user_acquisition       # 用户来源
-python scripts/ga4_query.py --preset device_breakdown        # 设备分布
-python scripts/ga4_query.py --preset geo_distribution        # 地理分布
-python scripts/ga4_query.py --preset landing_pages           # 着陆页
-python scripts/ga4_query.py --preset user_behavior           # 用户行为
-python scripts/ga4_query.py --preset conversion_events       # 转化事件
+python scripts/ga4_query.py --preset traffic_overview       # Daily traffic trends
+python scripts/ga4_query.py --preset top_pages --limit 50   # Top pages
+python scripts/ga4_query.py --preset user_acquisition       # User acquisition sources
+python scripts/ga4_query.py --preset device_breakdown        # Device distribution
+python scripts/ga4_query.py --preset geo_distribution        # Geographic distribution
+python scripts/ga4_query.py --preset landing_pages           # Landing pages
+python scripts/ga4_query.py --preset user_behavior           # User behavior
+python scripts/ga4_query.py --preset conversion_events       # Conversion events
 ```
 
-命令行 `--property-id` 可覆盖 `.env` 中的 `GA4_PROPERTY_ID`。
+The `--property-id` CLI flag overrides `GA4_PROPERTY_ID` from `.env`.
 
-### 自定义查询
+### Custom Queries
 
 ```bash
 python scripts/ga4_query.py \
@@ -56,49 +56,49 @@ python scripts/ga4_query.py \
     --order-by -sessions --limit 200
 ```
 
-### 日期格式
+### Date Formats
 
-支持绝对日期和相对日期：
-- 绝对: `2025-01-01`
-- 相对: `today`, `yesterday`, `NdaysAgo`（如 `28daysAgo`）
+Both absolute and relative dates are supported:
+- Absolute: `2025-01-01`
+- Relative: `today`, `yesterday`, `NdaysAgo` (e.g., `28daysAgo`)
 
-## 常用维度
+## Common Dimensions
 
-| 维度 | 说明 |
-|------|------|
-| `date` | 日期 |
-| `pagePath` | 页面路径 |
-| `pageTitle` | 页面标题 |
-| `landingPage` | 着陆页 |
-| `sessionDefaultChannelGroup` | 渠道分组 |
-| `sessionSource` / `sessionMedium` | 来源 / 媒介 |
-| `deviceCategory` | 设备类别 |
-| `operatingSystem` / `browser` | 操作系统 / 浏览器 |
-| `country` / `city` | 国家 / 城市 |
-| `eventName` | 事件名称 |
+| Dimension | Description |
+|-----------|-------------|
+| `date` | Date |
+| `pagePath` | Page path |
+| `pageTitle` | Page title |
+| `landingPage` | Landing page |
+| `sessionDefaultChannelGroup` | Channel grouping |
+| `sessionSource` / `sessionMedium` | Source / Medium |
+| `deviceCategory` | Device category |
+| `operatingSystem` / `browser` | Operating system / Browser |
+| `country` / `city` | Country / City |
+| `eventName` | Event name |
 
-## 常用指标
+## Common Metrics
 
-| 指标 | 说明 |
-|------|------|
-| `sessions` | 会话数 |
-| `totalUsers` / `newUsers` | 总用户数 / 新用户数 |
-| `screenPageViews` | 页面浏览量 |
-| `bounceRate` | 跳出率 |
-| `averageSessionDuration` | 平均会话时长（秒） |
-| `engagementRate` / `engagedSessions` | 互动率 / 互动会话数 |
-| `eventCount` | 事件数 |
-| `conversions` | 转化次数 |
+| Metric | Description |
+|--------|-------------|
+| `sessions` | Session count |
+| `totalUsers` / `newUsers` | Total users / New users |
+| `screenPageViews` | Page views |
+| `bounceRate` | Bounce rate |
+| `averageSessionDuration` | Average session duration (seconds) |
+| `engagementRate` / `engagedSessions` | Engagement rate / Engaged sessions |
+| `eventCount` | Event count |
+| `conversions` | Conversion count |
 
-## 预置模板说明
+## Preset Template Reference
 
-| 模板名 | 用途 |
-|--------|------|
-| `traffic_overview` | 每日流量趋势，发现流量异常 |
-| `top_pages` | 找出最受欢迎的页面和低效页面 |
-| `user_acquisition` | 分析用户来源渠道效果 |
-| `device_breakdown` | 设备和浏览器分布，发现兼容性问题 |
-| `geo_distribution` | 地理分布，优化国际化策略 |
-| `landing_pages` | 着陆页效果，优化入口体验 |
-| `user_behavior` | 用户行为路径和互动深度 |
-| `conversion_events` | 转化事件追踪和漏斗分析 |
+| Template | Purpose |
+|----------|---------|
+| `traffic_overview` | Daily traffic trends; detect traffic anomalies |
+| `top_pages` | Find most popular and underperforming pages |
+| `user_acquisition` | Analyze user source channel effectiveness |
+| `device_breakdown` | Device and browser distribution; detect compatibility issues |
+| `geo_distribution` | Geographic distribution; optimize internationalization |
+| `landing_pages` | Landing page performance; optimize entry experience |
+| `user_behavior` | User behavior paths and engagement depth |
+| `conversion_events` | Conversion event tracking and funnel analysis |
