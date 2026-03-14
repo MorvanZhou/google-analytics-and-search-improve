@@ -1,0 +1,25 @@
+# Skills runtime data (credentials, crawled data, caches, venvs)
+.skills-data/*
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+
+# Virtual environments
+venv/
+.venv/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Secrets
+*.env
+service-account*.json
