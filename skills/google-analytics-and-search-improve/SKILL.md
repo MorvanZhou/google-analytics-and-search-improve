@@ -17,6 +17,7 @@ All runtime data is stored in `$DATA_DIR`, separated from skill code.
   data/       # GSC/GA4/PSI data (JSON or CSV)
   tmp/        # Screenshots and temporary files
   cache/      # API response cache
+  configs/    # Config files
   logs/       # Execution logs
   venv/       # Python virtual environment
 ```
