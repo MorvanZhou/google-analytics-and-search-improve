@@ -31,6 +31,7 @@ Analysis Progress:
 - [ ] Phase 3: GA4 data analysis
 - [ ] Phase 4: Live site audit
 - [ ] Phase 5: Source code review
+- [ ] Phase 5b: SEO & GEO optimization checklist audit
 - [ ] Phase 6: Generate improvement report
 ```
 
@@ -259,6 +260,49 @@ Check items detailed in the "Technical Issues" checklist in [references/metrics-
 
 ---
 
+### Phase 5b: SEO & GEO Optimization Checklist Audit
+
+Run through the SEO & GEO optimization checklist in [references/SEO-GEO-Optimization-Checklist.md](references/SEO-GEO-Optimization-Checklist.md) to evaluate the site's search engine and generative AI readiness.
+
+**Run the audit scripts** to collect data automatically:
+
+```bash
+set -a; source "$DATA_DIR/.env"; set +a
+
+# SEO audit — JSON-LD, meta tags, headings, sitemap, Open Graph, canonical, hreflang
+python scripts/seo_audit.py --url "$SITE_URL" --sitemap -o "$DATA_DIR/data/seo_audit.json"
+
+# GEO audit — llms.txt, robots.txt AI crawlers, content depth, question headings, FAQ/HowTo schemas
+python scripts/geo_audit.py --url "$SITE_URL" --sitemap -o "$DATA_DIR/data/geo_audit.json"
+
+# Performance audit — load time, compression, HSTS, HTML size, TLS, CDN detection
+python scripts/perf_audit.py --url "$SITE_URL" --sitemap -o "$DATA_DIR/data/perf_audit.json"
+```
+
+Each script supports:
+- `--url URL` — target site (or reads `SITE_URL` from `.env`)
+- `--sitemap` — audit all pages from sitemap.xml
+- `--pages "/path1,/path2"` — audit specific pages
+- `--max-pages N` — limit pages when using `--sitemap`
+- `-o FILE` — write JSON report to file (default: stdout)
+
+The scripts check the following categories against the target site:
+
+1. **Structured Data (JSON-LD)** (`seo_audit.py`): Coverage, SSR output, schema types, content uniqueness
+2. **Meta Tags & Open Graph** (`seo_audit.py`): Title/description length, canonical, hreflang, og:image, Twitter Card
+3. **Heading Structure** (`seo_audit.py`): H1 count, question-style heading ratio (GEO signal)
+4. **Sitemap** (`seo_audit.py`): Presence, page count, lastmod, robots.txt declaration
+5. **AI Readability (GEO)** (`geo_audit.py`): llms.txt/llms-full.txt, robots.txt AI crawler rules (GPTBot, ClaudeBot, etc.)
+6. **Content Depth** (`geo_audit.py`): Word count, TL;DR detection, FAQ/HowTo sections, schema presence
+7. **Performance** (`perf_audit.py`): Load time (FCP proxy), compression (Brotli/gzip), HTML size, CDN detection
+8. **Security** (`perf_audit.py`): HSTS, HTTPS, CSP, X-Frame-Options, Cache-Control
+
+For any items not covered by the scripts (e.g. off-page authority, visual content review), use the detection commands in Section 7 of the checklist reference.
+
+**Output**: SEO/GEO readiness checklist with pass/fail status for each item and specific improvement recommendations, classified by the P0-P3 priority matrix in Section 8 of the checklist.
+
+---
+
 ### Phase 6: Generate Improvement Report
 
 Organize output according to the "Priority Matrix" (P0-P3) in [references/metrics-glossary.md](references/metrics-glossary.md). Use the following template:
@@ -287,7 +331,7 @@ Organize output according to the "Priority Matrix" (P0-P3) in [references/metric
 (Same format as above)
 
 ## Detailed Analysis
-(Organized by SEO / Performance / Content Strategy / UX / Conversion Rate / Technical Issues)
+(Organized by SEO / Performance / Content Strategy / UX / Conversion Rate / Technical Issues / SEO & GEO Checklist)
 
 ## Execution Roadmap
 | Phase | Timeline | Tasks | Expected Outcome |
@@ -312,3 +356,4 @@ Save the report to `$DATA_DIR/data/improvement-report.md`.
 | [references/gsc-api-guide.md](references/gsc-api-guide.md) | GSC auth setup (step-by-step), script usage, dimensions & metrics |
 | [references/ga4-api-guide.md](references/ga4-api-guide.md) | GA4 auth setup, preset templates, dimensions & metrics |
 | [references/metrics-glossary.md](references/metrics-glossary.md) | Six analysis dimensions: thresholds, diagnostics, priority matrix |
+| [references/SEO-GEO-Optimization-Checklist.md](references/SEO-GEO-Optimization-Checklist.md) | SEO & GEO optimization checklist: structured data, AI readability, content depth, technical SEO, performance, off-page authority, detection commands, priority matrix |
