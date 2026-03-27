@@ -229,7 +229,7 @@ Allow: /
 
 | Content Block | Description | Target Words |
 |--------------|-------------|:----------:|
-| **TL;DR Paragraph** | Top of page — directly answers "what is this, what does it do" | 100 |
+| **Intro Summary** | Top of page (between H1 and first H2) — directly answers "what is this, what does it do" | 100 |
 | **How to Use** | 3-5 step guide, paired with HowTo Schema | 200 |
 | **Technical Details** | Technical principles (algorithms, architecture, privacy model) | 200 |
 | **Use Cases / Scenarios** | Usage scenarios: "ideal for designers", "perfect for developers" | 150 |
@@ -238,7 +238,7 @@ Allow: /
 
 ### 3.3 Key Principles
 
-- [ ] **First 200 words must directly answer the core question** (TL;DR-first principle)
+- [ ] **First 200 words must directly answer the core question** (intro-summary-first principle)
 - [ ] One deep guide > ten shallow pages
 - [ ] Include specific data and cited sources (e.g. "reduces size by 70%", "based on WebAssembly")
 - [ ] Avoid pure feature lists — add explanatory content
@@ -367,7 +367,7 @@ python3 scripts/seo_audit.py --url "$SITE_URL" --sitemap -o data/seo_audit.json
 
 ### 7.2 GEO Audit (`geo_audit.py`)
 
-Covers: llms.txt / llms-full.txt, robots.txt AI crawler rules, content depth (auto-detects CJK vs English, see [3.1](#31-word-count-targets)), TL;DR detection, FAQ/HowTo sections, question-style headings.
+Covers: llms.txt / llms-full.txt, robots.txt AI crawler rules, content depth (auto-detects CJK vs English, see [3.1](#31-word-count-targets)), intro summary detection, FAQ/HowTo sections, question-style headings.
 
 ```bash
 # Homepage only

@@ -293,7 +293,7 @@ The scripts check the following categories against the target site:
 3. **Heading Structure** (`seo_audit.py`): H1 count, question-style heading ratio (GEO signal)
 4. **Sitemap** (`seo_audit.py`): Presence, page count, lastmod, robots.txt declaration
 5. **AI Readability (GEO)** (`geo_audit.py`): llms.txt/llms-full.txt, robots.txt AI crawler rules (GPTBot, ClaudeBot, etc.)
-6. **Content Depth** (`geo_audit.py`): Word count, TL;DR detection, FAQ/HowTo sections, schema presence
+6. **Content Depth** (`geo_audit.py`): Word count (CJK-aware), intro summary detection, FAQ/HowTo sections, schema presence
 7. **Performance** (`perf_audit.py`): Load time (FCP proxy), compression (Brotli/gzip), HTML size, CDN detection
 8. **Security** (`perf_audit.py`): HSTS, HTTPS, CSP, X-Frame-Options, Cache-Control
 

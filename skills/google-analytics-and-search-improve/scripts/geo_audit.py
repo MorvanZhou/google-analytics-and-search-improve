@@ -252,11 +252,11 @@ def audit_robots_ai_crawlers(base_url: str) -> dict:
 # ---------------------------------------------------------------------------
 
 def audit_content_depth(url: str, html: str) -> dict:
-    """Analyze page content depth: word count, structure, TL;DR, FAQ."""
+    """Analyze page content depth: word count, structure, intro summary, FAQ."""
     result = {
         "url": url,
         "word_count": 0,
-        "has_tldr": False,
+        "has_intro_summary": False,
         "has_faq_section": False,
         "has_howto_content": False,
         "heading_count": 0,
@@ -287,11 +287,24 @@ def audit_content_depth(url: str, html: str) -> dict:
     result["is_cjk_dominant"] = is_cjk_dominant
     result["word_count"] = cjk_chars if is_cjk_dominant else en_words
 
-    # Check TL;DR / summary at top
-    first_500_chars = text[:500].lower()
-    tldr_signals = ["tl;dr", "tldr", "in short", "summary", "overview", "at a glance", "what is",
-                     "简介", "概述", "总结", "一句话", "摘要", "导读"]
-    result["has_tldr"] = any(s in first_500_chars for s in tldr_signals)
+    # Check for intro summary: a meaningful text block before the first <h2>.
+    # Language-agnostic — checks length, not specific keywords.
+    intro_text = ""
+    h1_match = re.search(r'</h1>', clean_main, re.IGNORECASE)
+    h2_match = re.search(r'<h2[\s>]', clean_main, re.IGNORECASE)
+    if h1_match:
+        start = h1_match.end()
+        end = h2_match.start() if h2_match and h2_match.start() > start else start + 3000
+        intro_html = clean_main[start:end]
+        intro_text = re.sub(r'<[^>]+>', ' ', intro_html)
+        intro_text = re.sub(r'\s+', ' ', intro_text).strip()
+
+    if is_cjk_dominant:
+        intro_len = sum(1 for ch in intro_text if '\u4e00' <= ch <= '\u9fff'
+                        or '\u3400' <= ch <= '\u4dbf')
+        result["has_intro_summary"] = intro_len >= 50
+    else:
+        result["has_intro_summary"] = len(intro_text.split()) >= 30
 
     # Check for FAQ section
     faq_signals = ["faq", "frequently asked", "common questions", "q&a",
@@ -336,7 +349,7 @@ def audit_content_depth(url: str, html: str) -> dict:
         target_label = "800-1200 words"
 
     result["checks"]["word_count_sufficient"] = result["word_count"] >= min_target
-    result["checks"]["has_tldr"] = result["has_tldr"]
+    result["checks"]["has_intro_summary"] = result["has_intro_summary"]
     result["checks"]["has_faq_section"] = result["has_faq_section"]
     result["checks"]["has_question_headings"] = question_count > 0
 
@@ -345,8 +358,8 @@ def audit_content_depth(url: str, html: str) -> dict:
     elif result["word_count"] < min_target:
         result["issues"].append(f"Below content depth target ({result['word_count']} {unit}) — target {target_label}")
 
-    if not result["has_tldr"]:
-        result["issues"].append("No TL;DR / summary paragraph detected near page top")
+    if not result["has_intro_summary"]:
+        result["issues"].append("No intro summary paragraph detected between H1 and first H2")
 
     if not result["has_faq_section"]:
         result["issues"].append("No FAQ section detected — adding FAQ improves GEO citations")
