@@ -214,8 +214,16 @@ Allow: /
 
 > 2026 GEO research consistently shows: AI engines prefer reference-grade content. Content with statistics and cited sources gets 30-40% more AI citations.
 
-- [ ] Target **800-1200 words** per key page (excluding navigation and footer)
-- [ ] Detection method: see [Detection Commands](#7-detection-commands)
+- [ ] Target per key page (excluding navigation and footer):
+
+| Language | Metric | Target | Notes |
+|----------|--------|--------|-------|
+| English | Words (space-separated) | **800-1200** | Standard GEO recommendation |
+| Chinese | Characters (CJK codepoints) | **1600-2400** | ~2 Chinese chars ≈ 1 English word in information density |
+
+> **Why separate thresholds?** Chinese text has no spaces between words. Counting by `split()` on Chinese content returns near-zero, severely underestimating actual content depth. Always use **CJK character count** for Chinese pages.
+
+- [ ] Detection method: see [Detection Commands](#7-detection-commands) — the script auto-detects language and reports both metrics
 
 ### 3.2 Recommended Content Structure
 
@@ -337,122 +345,68 @@ curl -sI -H "Accept-Encoding: gzip, br" "$SITE_URL/" | grep -i 'content-encoding
 
 ## 7. Detection Commands
 
-All commands use `$SITE_URL` from the `.env` file. Replace paths as needed for the target site.
+All audit scripts live in `scripts/` and accept the same core arguments. They use `$SITE_URL` from `.env` or `--url`.
 
-### 7.1 JSON-LD Coverage Check
+### 7.1 SEO Audit (`seo_audit.py`)
+
+Covers: JSON-LD coverage, meta tags, headings, og:image, canonical, hreflang, SSR empty-shell detection, sitemap, HowTo/FAQ schema.
 
 ```bash
-# Check JSON-LD count on a specific page
-curl -sL "$SITE_URL/" | grep -c 'application/ld+json'
+# Homepage only
+python3 scripts/seo_audit.py --url "$SITE_URL"
 
-# List JSON-LD types on a page
-curl -sL "$SITE_URL/" | \
-  grep -o '<script type="application/ld+json">[^<]*</script>' | \
-  sed 's/<script type="application\/ld+json">//;s/<\/script>//' | \
-  python3 -c "
-import sys, json
-for i, line in enumerate(sys.stdin, 1):
-    line = line.strip()
-    if not line: continue
-    d = json.loads(line)
-    t = d.get('@type','?')
-    name = d.get('name','')[:60] if isinstance(d.get('name'), str) else ''
-    print(f'  Block {i}: @type={t}  name={name}')
-"
+# Specific pages
+python3 scripts/seo_audit.py --url "$SITE_URL" --pages "/,/about,/pricing"
+
+# Full-site audit via sitemap (JSON-LD + meta per page)
+python3 scripts/seo_audit.py --url "$SITE_URL" --sitemap
+
+# Save results to file
+python3 scripts/seo_audit.py --url "$SITE_URL" --sitemap -o data/seo_audit.json
 ```
 
-### 7.2 Sitemap-based Full-site JSON-LD Audit
+### 7.2 GEO Audit (`geo_audit.py`)
+
+Covers: llms.txt / llms-full.txt, robots.txt AI crawler rules, content depth (auto-detects CJK vs English, see [3.1](#31-word-count-targets)), TL;DR detection, FAQ/HowTo sections, question-style headings.
 
 ```bash
-# Extract URLs from sitemap and check JSON-LD count on each page
-curl -sL "$SITE_URL/sitemap.xml" | \
-  grep '<loc>' | sed 's/.*<loc>//;s/<\/loc>.*//' | \
-  while read url; do
-    count=$(curl -sL "$url" | grep -c 'application/ld+json')
-    if [ "$count" -lt 3 ]; then
-      echo "⚠️  ${url}: ${count} JSON-LD blocks"
-    else
-      echo "✅ ${url}: ${count} JSON-LD blocks"
-    fi
-  done
+# Homepage only
+python3 scripts/geo_audit.py --url "$SITE_URL"
+
+# Specific pages
+python3 scripts/geo_audit.py --url "$SITE_URL" --pages "/,/blog/my-post"
+
+# Full-site audit via sitemap (max 50 pages)
+python3 scripts/geo_audit.py --url "$SITE_URL" --sitemap
+
+# Save results to file
+python3 scripts/geo_audit.py --url "$SITE_URL" --sitemap -o data/geo_audit.json
 ```
 
-### 7.3 Page Word Count
+### 7.3 Performance & Security Audit (`perf_audit.py`)
+
+Covers: load time (TTFB, total), compression (Brotli/gzip), HTML size, HSTS, HTTPS/TLS version, cache headers, CSP, X-Frame-Options, CDN detection.
 
 ```bash
-curl -sL "$SITE_URL/" | python3 -c "
-import sys, re
-html = sys.stdin.read()
-html = re.sub(r'<script[^>]*>.*?</script>', '', html, flags=re.S)
-html = re.sub(r'<style[^>]*>.*?</style>', '', html, flags=re.S)
-text = re.sub(r'<[^>]+>', ' ', html)
-text = re.sub(r'\s+', ' ', text).strip()
-words = text.split()
-print(f'Total visible text words: {len(words)}')
-"
+# Homepage only
+python3 scripts/perf_audit.py --url "$SITE_URL"
+
+# Specific pages
+python3 scripts/perf_audit.py --url "$SITE_URL" --pages "/,/about"
+
+# Full-site via sitemap (max 20 pages)
+python3 scripts/perf_audit.py --url "$SITE_URL" --sitemap
+
+# Save results to file
+python3 scripts/perf_audit.py --url "$SITE_URL" --sitemap -o data/perf_audit.json
 ```
 
-### 7.4 SSR Empty Shell Detection
+### 7.4 Run All Audits
 
 ```bash
-# Check if pages return real HTML (not empty-shell redirects)
-# Healthy pages should be > 10KB; empty shells are typically < 200 bytes
-curl -sL "$SITE_URL/" | wc -c
-```
-
-### 7.5 llms.txt Check
-
-```bash
-echo "=== llms.txt ===" && curl -sL "$SITE_URL/llms.txt" | head -10
-echo "=== llms-full.txt ===" && curl -sL "$SITE_URL/llms-full.txt" | wc -l
-echo "=== robots.txt reference ===" && curl -sL "$SITE_URL/robots.txt" | grep -i llms
-```
-
-### 7.6 Meta Tags Check
-
-```bash
-curl -sL "$SITE_URL/" | grep -oE '<meta [^>]+>' | head -20
-curl -sL "$SITE_URL/" | grep -o '<title>[^<]*</title>'
-curl -sL "$SITE_URL/" | grep -i canonical
-curl -sL "$SITE_URL/" | grep -i hreflang
-curl -sL "$SITE_URL/" | grep -i 'og:'
-curl -sL "$SITE_URL/" | grep -i 'twitter:'
-```
-
-### 7.7 Security & Performance Check
-
-```bash
-# HSTS
-curl -sI "$SITE_URL/" | grep -i 'strict-transport'
-
-# HTTP protocol version
-curl -sI "$SITE_URL/" | head -1
-
-# Compression
-curl -sI -H "Accept-Encoding: gzip, br" "$SITE_URL/" | grep -i 'content-encoding'
-
-# Load time
-curl -sL -o /dev/null -w "Total: %{time_total}s\n" "$SITE_URL/"
-```
-
-### 7.8 og:image Uniqueness Check
-
-```bash
-# Check if different pages have distinct og:image values
-# Replace paths with actual pages from the target site's sitemap
-curl -sL "$SITE_URL/" | grep -o 'og:image" content="[^"]*"' | head -1
-```
-
-### 7.9 Heading Format Check
-
-```bash
-curl -sL "$SITE_URL/" | grep -oE '<h[1-6][^>]*>[^<]*</h[1-6]>'
-```
-
-### 7.10 HowTo Schema Check
-
-```bash
-curl -sL "$SITE_URL/" | grep -c '"HowTo"'
+python3 scripts/seo_audit.py  --url "$SITE_URL" --sitemap -o data/seo_audit.json
+python3 scripts/geo_audit.py  --url "$SITE_URL" --sitemap -o data/geo_audit.json
+python3 scripts/perf_audit.py --url "$SITE_URL" --sitemap -o data/perf_audit.json
 ```
 
 ---

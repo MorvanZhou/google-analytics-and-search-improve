@@ -274,21 +274,34 @@ def audit_content_depth(url: str, html: str) -> dict:
     clean_main = re.sub(r'<(nav|header|footer)[^>]*>.*?</\1>', '', clean, flags=re.DOTALL | re.IGNORECASE)
     text = re.sub(r'<[^>]+>', ' ', clean_main)
     text = re.sub(r'\s+', ' ', text).strip()
-    words = text.split()
-    result["word_count"] = len(words)
+
+    cjk_chars = sum(1 for ch in text if '\u4e00' <= ch <= '\u9fff'
+                    or '\u3400' <= ch <= '\u4dbf'
+                    or '\U00020000' <= ch <= '\U0002a6df')
+    non_cjk_text = re.sub(r'[\u4e00-\u9fff\u3400-\u4dbf]', ' ', text)
+    en_words = len(non_cjk_text.split())
+
+    is_cjk_dominant = cjk_chars > en_words
+    result["cjk_chars"] = cjk_chars
+    result["en_words"] = en_words
+    result["is_cjk_dominant"] = is_cjk_dominant
+    result["word_count"] = cjk_chars if is_cjk_dominant else en_words
 
     # Check TL;DR / summary at top
     first_500_chars = text[:500].lower()
-    tldr_signals = ["tl;dr", "tldr", "in short", "summary", "overview", "at a glance", "what is"]
+    tldr_signals = ["tl;dr", "tldr", "in short", "summary", "overview", "at a glance", "what is",
+                     "简介", "概述", "总结", "一句话", "摘要", "导读"]
     result["has_tldr"] = any(s in first_500_chars for s in tldr_signals)
 
     # Check for FAQ section
-    faq_signals = ["faq", "frequently asked", "common questions", "q&a"]
+    faq_signals = ["faq", "frequently asked", "common questions", "q&a",
+                    "常见问题", "问答", "疑问解答"]
     html_lower = html.lower()
     result["has_faq_section"] = any(s in html_lower for s in faq_signals)
 
     # Check for HowTo content
-    howto_signals = ["step 1", "step 2", "how to", "getting started", "tutorial"]
+    howto_signals = ["step 1", "step 2", "how to", "getting started", "tutorial",
+                     "第一步", "第二步", "步骤", "教程", "使用方法", "操作指南"]
     result["has_howto_content"] = any(s in html_lower for s in howto_signals)
 
     # Heading analysis
@@ -298,7 +311,7 @@ def audit_content_depth(url: str, html: str) -> dict:
     question_count = 0
     for _, heading_text in headings:
         cleaned = re.sub(r'<[^>]+>', '', heading_text).strip()
-        if cleaned.rstrip().endswith("?"):
+        if cleaned.rstrip().endswith("?") or cleaned.rstrip().endswith("？"):
             question_count += 1
 
     result["question_headings"] = question_count
@@ -312,16 +325,25 @@ def audit_content_depth(url: str, html: str) -> dict:
     result["checks"]["has_faq_schema"] = faq_schema
     result["checks"]["has_howto_schema"] = howto_schema
 
-    # Issues
-    result["checks"]["word_count_sufficient"] = result["word_count"] >= 800
+    # Issues — thresholds differ by dominant language
+    if is_cjk_dominant:
+        min_thin, min_target = 600, 1600
+        unit = "CJK chars"
+        target_label = "1600-2400 CJK chars"
+    else:
+        min_thin, min_target = 300, 800
+        unit = "words"
+        target_label = "800-1200 words"
+
+    result["checks"]["word_count_sufficient"] = result["word_count"] >= min_target
     result["checks"]["has_tldr"] = result["has_tldr"]
     result["checks"]["has_faq_section"] = result["has_faq_section"]
     result["checks"]["has_question_headings"] = question_count > 0
 
-    if result["word_count"] < 300:
-        result["issues"].append(f"Very thin content ({result['word_count']} words) — target 800-1200 words")
-    elif result["word_count"] < 800:
-        result["issues"].append(f"Below content depth target ({result['word_count']} words) — target 800-1200 words")
+    if result["word_count"] < min_thin:
+        result["issues"].append(f"Very thin content ({result['word_count']} {unit}) — target {target_label}")
+    elif result["word_count"] < min_target:
+        result["issues"].append(f"Below content depth target ({result['word_count']} {unit}) — target {target_label}")
 
     if not result["has_tldr"]:
         result["issues"].append("No TL;DR / summary paragraph detected near page top")
@@ -485,11 +507,13 @@ def main():
     else:
         print(f"AI crawlers: ✅ None blocked", file=sys.stderr)
 
-    avg_words = (
-        sum(pr.get("word_count", 0) for pr in page_results) / len(page_results)
-        if page_results else 0
-    )
-    print(f"Avg content depth: {avg_words:.0f} words/page (target: 800-1200)", file=sys.stderr)
+    if page_results:
+        any_cjk = any(pr.get("is_cjk_dominant", False) for pr in page_results)
+        avg_score = sum(pr.get("word_count", 0) for pr in page_results) / len(page_results)
+        if any_cjk:
+            print(f"Avg content depth: {avg_score:.0f} CJK chars/page (target: 1600-2400)", file=sys.stderr)
+        else:
+            print(f"Avg content depth: {avg_score:.0f} words/page (target: 800-1200)", file=sys.stderr)
     print(f"{'='*60}", file=sys.stderr)
 
 
