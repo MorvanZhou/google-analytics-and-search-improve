@@ -116,13 +116,20 @@ Select the types applicable to the target site. Not every site needs all types �
 
 ### 2.2 robots.txt AI Crawler Configuration
 
-- [ ] Explicitly allow major AI crawlers:
+- [ ] Explicitly allow major AI crawlers (global + China):
 
 ```
+# --- Global AI Crawlers ---
 User-agent: GPTBot
 Allow: /
 
+User-agent: ChatGPT-User
+Allow: /
+
 User-agent: ClaudeBot
+Allow: /
+
+User-agent: anthropic-ai
 Allow: /
 
 User-agent: PerplexityBot
@@ -130,9 +137,43 @@ Allow: /
 
 User-agent: Google-Extended
 Allow: /
+
+# --- Chinese AI Crawlers ---
+User-agent: Bytespider
+Allow: /
+
+User-agent: Doubaobot
+Allow: /
+
+User-agent: ERNIEBot
+Allow: /
+
+User-agent: Baiduspider
+Allow: /
+
+User-agent: DeepSeekBot
+Allow: /
+
+User-agent: QwenBot
+Allow: /
+
+User-agent: TongyiBot
+Allow: /
 ```
 
+| Crawler | Company | AI Product |
+|---------|---------|------------|
+| GPTBot / ChatGPT-User | OpenAI | ChatGPT, GPT Search |
+| ClaudeBot / anthropic-ai | Anthropic | Claude |
+| PerplexityBot | Perplexity | Perplexity AI Search |
+| Google-Extended | Google | Gemini, AI Overviews |
+| Bytespider / Doubaobot | ByteDance | Doubao (豆包) |
+| ERNIEBot / Baiduspider | Baidu | ERNIE Bot (文心一言) |
+| DeepSeekBot | DeepSeek | DeepSeek |
+| QwenBot / TongyiBot | Alibaba | Qwen / Tongyi Qianwen (通义千问) |
+
 - [ ] Avoid over-restriction: A single `Allow: /` per bot is sufficient
+- [ ] Note: ByteSpider has aggressive crawl rates — if bandwidth is a concern, consider adding `Crawl-delay` or rate-limiting at the server level rather than blocking entirely
 
 ### 2.3 H2/H3 Heading Format (Question-style)
 
