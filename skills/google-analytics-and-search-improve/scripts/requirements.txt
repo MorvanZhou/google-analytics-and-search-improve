@@ -3,3 +3,4 @@ google-auth
 google-analytics-data
 python-dotenv
 requests
+matplotlib
