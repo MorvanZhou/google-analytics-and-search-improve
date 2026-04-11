@@ -2,50 +2,28 @@
 
 [English](README.md)
 
-一个 AI 代理技能，通过 Google Search Console (GSC) 和 Google Analytics 4 (GA4) API 分析网站数据，结合浏览器自动化审计和源代码分析，生成数据驱动的改进方案。
+一个 AI 代理技能，执行目标驱动的网站分析 — 从 Google Search Console 和 GA4 采集数据，审计 SEO/GEO 就绪度，生成带数据可视化的优先级改进方案。
 
 ## 功能概述
 
 给你的 AI 代理一个网站 URL，它会：
 
-1. **采集数据** — 通过 API 从 GSC 和 GA4 获取数据（或手动导出 CSV）
-2. **分析搜索表现** — 关键词、CTR、排名、索引健康度
-3. **分析用户行为** — 流量来源、跳出率、设备分布、转化漏斗
-4. **审计线上网站** — 截图、PageSpeed Insights、SEO 元数据提取
-5. **审查源代码**（可选）— meta 标签、结构化数据、性能模式
-6. **生成优先级报告** — 覆盖 6 大维度的 P0-P3 行动项
+1. **理解网站目标** — 访问网站，定义预期用户旅程
+2. **采集搜索和分析数据** — 通过 GSC 和 GA4 API（或手动导出 CSV）
+3. **分析用户偏离点** — 将搜索关键词和用户行为与目标对照
+4. **审计线上站点** — SEO 元数据、GEO（AI 搜索）就绪度、性能、安全
+5. **生成优先级报告** — P0-P3 行动项，附图表和执行路线图
 
-### 六大分析维度
+### 核心理念
 
-| 维度 | 数据源 | 关键指标 |
-|------|--------|----------|
-| SEO 优化 | GSC | CTR、排名、展示量、索引覆盖率 |
-| 网站性能 | PageSpeed Insights | LCP、INP、CLS、TTFB |
-| 内容策略 | GA4 + GSC | 页面浏览量、互动率、内容缺口 |
-| 用户体验 | GA4 | 跳出率、会话时长、设备分布 |
-| 转化率 | GA4 | 漏斗分析、着陆页转化率 |
-| 技术问题 | 浏览器 + 源代码 | meta 标签、JSON-LD、robots.txt、sitemap、无障碍 |
+**目标 → 数据 → 差距 → 行动**
+
+所有分析都从网站期望用户做什么出发。技能找到现实偏离预期的地方，告诉你该修什么。
 
 ## 安装
 
 ```bash
 npx skills add morvanzhou/google-analytics-and-search-improve
-```
-
-或手动克隆到你的技能目录：
-
-```
-skills/
-  google-analytics-and-search-improve/
-    SKILL.md              # 技能定义（工作流指令）
-    scripts/
-      gsc_query.py        # GSC API 数据提取
-      ga4_query.py        # GA4 API 数据提取
-      requirements.txt    # Python 依赖
-    references/
-      gsc-api-guide.md    # GSC 认证配置 & 脚本用法
-      ga4-api-guide.md    # GA4 认证配置 & 预置模板
-      metrics-glossary.md # 分析阈值 & 优先级矩阵
 ```
 
 ## 快速开始
@@ -54,70 +32,48 @@ skills/
 
 > 使用 google-analytics-and-search-improve 技能分析 example.com
 
-技能提供三种数据采集模式：
+代理会引导你完成配置，并自动执行完整分析。
 
-| 模式 | 配置时间 | 数据覆盖 |
-|------|---------|----------|
-| **A. API 自动采集**（推荐）| 首次约 10 分钟 | 完整的 GSC + GA4 数据 |
-| **B. 手动导出 CSV** | 无需配置 | 取决于你导出的内容 |
-| **C. 仅浏览器审计** | 无需配置 | 仅技术审计 |
+### 数据采集模式
 
-### 模式 A：API 配置
+| 模式 | 配置 | 适用场景 |
+|------|------|----------|
+| **API 自动采集**（推荐）| Google Cloud Service Account（首次约 10 分钟）| 完整分析，数据最全 |
+| **手动导出 CSV** | 无需配置 | 用导出数据快速分析 |
+| **仅浏览器审计** | 无需配置 | 不需要分析数据的技术 SEO/GEO 审计 |
 
-需要一个 Google Cloud Service Account，同时授权访问 GSC 和 GA4。
+### API 配置（模式 A）
 
-1. **创建 Google Cloud 项目**，启用以下 API：
-   - Google Search Console API
-   - Google Analytics Data API
-   - PageSpeed Insights API
+1. 创建 Google Cloud 项目，启用 **Search Console API**、**Analytics Data API** 和 **PageSpeed Insights API**
+2. 创建 Service Account，下载 JSON 密钥
+3. 授权访问：在 GSC 和 GA4 中添加 SA 邮箱为查看者
+4. 告诉代理你的密钥文件路径、GSC 网站地址和 GA4 Property ID
 
-2. **创建 Service Account**，下载 JSON 密钥文件
+> **提示**：GSC 有两种资源类型 — 网域（`sc-domain:example.com`）和网址前缀（`https://example.com`）。填错格式会导致 403 错误。
 
-3. **授权访问**：
-   - 在 GSC 中：设置 → 用户和权限 → 添加 SA 邮箱为「受限」用户
-   - 在 GA4 中：管理 → 属性访问管理 → 添加 SA 邮箱为「查看者」
+详细配置步骤见 [references/gsc-api-guide.md](skills/google-analytics-and-search-improve/references/gsc-api-guide.md)。
 
-4. **向 AI 代理提供配置**：
-   - JSON 密钥文件路径（使用绝对路径）
-   - GSC 网站地址 — 网域资源使用 `sc-domain:example.com`，网址前缀资源使用 `https://example.com`
-   - GA4 Property ID（纯数字）
-
-> **重要提示**：GSC 有两种资源类型，填错格式会导致 403 错误。在 [Search Console](https://search.google.com/search-console/) 左上角的网站选择器中查看——如果显示的是纯域名，使用 `sc-domain:` 前缀；如果显示完整 URL，直接使用该 URL。
-
-详细的配置步骤见 [references/gsc-api-guide.md](skills/google-analytics-and-search-improve/references/gsc-api-guide.md)。
-
-## 项目结构
+## 分析工作流
 
 ```
-.
-├── skills/google-analytics-and-search-improve/
-│   ├── SKILL.md                          # 技能定义 & 工作流
-│   ├── scripts/
-│   │   ├── gsc_query.py                  # GSC 搜索分析、Sitemap、URL 检查
-│   │   ├── ga4_query.py                  # GA4 查询，内置 8 种预置模板
-│   │   └── requirements.txt              # Python 依赖
-│   └── references/
-│       ├── gsc-api-guide.md              # 认证配置、脚本用法、维度说明
-│       ├── ga4-api-guide.md              # 认证配置、预置模板、指标说明
-│       └── metrics-glossary.md           # 分析阈值、诊断要点、优先级矩阵
-├── .skills-data/                         # 运行时数据（已 gitignore）
-│   └── google-analytics-and-search-improve/
-│       ├── .env                          # 认证凭据 & 配置
-│       ├── data/                         # 采集的 JSON/CSV 数据 & 报告
-│       ├── tmp/                          # 截图
-│       ├── cache/                        # API 响应缓存
-│       └── venv/                         # Python 虚拟环境
-└── .gitignore
+Phase 0  →  网站画像 & 目标定义
+Phase 1  →  数据采集（API / CSV / 仅浏览器）
+Phase 2  →  搜索表现分析（GSC）
+Phase 3  →  用户行为分析（GA4）
+Phase 3b →  漏斗探索（可选，自定义事件）
+Phase 4  →  线上站点审计（性能、SEO、安全）
+Phase 5  →  源代码审查（可选）
+Phase 5b →  SEO & GEO 优化清单
+Phase 6  →  目标对齐的改进报告 + 图表
 ```
 
 ## 输出
 
-技能会生成一份完整的改进报告，保存在 `.skills-data/google-analytics-and-search-improve/data/improvement-report.md`，包含：
+技能在 `.skills-data/google-analytics-and-search-improve/` 下生成完整的分析产出：
 
-- **数据概览** — 关键指标汇总，含当前值和趋势
-- **优先级行动项**（P0 紧急 → P3 低优）— 每项附带数据支撑、具体修复方案和预期效果
-- **详细分析** — 按 6 大维度展开
-- **执行路线图** — 按周制定的实施计划
+- **`analysis/improvement-report.md`** — 最终报告，含执行摘要、目标达成状态、P0-P3 优先行动项、执行路线图
+- **`analysis/`** — 各阶段详细报告（搜索分析、行为分析、漏斗分析、站点审计、SEO/GEO 清单）
+- **`charts/`** — 数据可视化图表（PNG），嵌入到报告中
 
 ## 协作技能
 

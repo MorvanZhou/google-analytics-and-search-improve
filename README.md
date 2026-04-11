@@ -2,50 +2,28 @@
 
 [中文文档](README_CN.md)
 
-An AI agent skill that analyzes website data via Google Search Console (GSC) and Google Analytics 4 (GA4) APIs, audits live sites with browser automation, reviews source code, and generates data-driven improvement plans.
+An AI agent skill that performs goal-driven website analysis — collecting data from Google Search Console and GA4, auditing SEO/GEO readiness, and generating prioritized improvement plans with data visualization.
 
 ## What It Does
 
 Give your AI agent a website URL, and it will:
 
-1. **Collect data** from GSC and GA4 via API (or manual CSV export)
-2. **Analyze search performance** — keywords, CTR, rankings, indexing health
-3. **Analyze user behavior** — traffic sources, bounce rates, device breakdowns, conversion funnels
-4. **Audit the live site** — screenshots, PageSpeed Insights, SEO metadata extraction
-5. **Review source code** (optional) — meta tags, structured data, performance patterns
-6. **Generate a prioritized report** — P0-P3 action items across 6 dimensions
+1. **Understand your website goals** — visit the site, define the intended user journey
+2. **Collect search & analytics data** — via GSC and GA4 APIs (or manual CSV export)
+3. **Analyze where users diverge** — map search queries and user behavior against your goals
+4. **Audit the live site** — SEO metadata, GEO (AI search) readiness, performance, security
+5. **Generate a prioritized report** — P0-P3 action items with charts, execution roadmap
 
-### Six Analysis Dimensions
+### Core Principle
 
-| Dimension | Data Source | Key Metrics |
-|-----------|------------|-------------|
-| SEO | GSC | CTR, rankings, impressions, index coverage |
-| Performance | PageSpeed Insights | LCP, INP, CLS, TTFB |
-| Content Strategy | GA4 + GSC | Page views, engagement rate, content gaps |
-| User Experience | GA4 | Bounce rate, session duration, device breakdowns |
-| Conversion | GA4 | Funnel analysis, landing page conversion rates |
-| Technical | Browser + Source | Meta tags, JSON-LD, robots.txt, sitemap, accessibility |
+**Goal → Data → Gap → Action**
+
+Every analysis starts from what your site wants users to do. The skill finds where reality diverges from intention and tells you exactly what to fix.
 
 ## Installation
 
 ```bash
 npx skills add morvanzhou/google-analytics-and-search-improve
-```
-
-Or clone manually into your skills directory:
-
-```
-skills/
-  google-analytics-and-search-improve/
-    SKILL.md              # Skill definition (workflow instructions)
-    scripts/
-      gsc_query.py        # GSC API data extraction
-      ga4_query.py        # GA4 API data extraction
-      requirements.txt    # Python dependencies
-    references/
-      gsc-api-guide.md    # GSC auth setup & script usage
-      ga4-api-guide.md    # GA4 auth setup & preset templates
-      metrics-glossary.md # Analysis thresholds & priority matrix
 ```
 
 ## Quick Start
@@ -54,70 +32,48 @@ Tell your AI agent:
 
 > Analyze example.com using the google-analytics-and-search-improve skill
 
-The skill offers three data collection modes:
+The agent will guide you through setup and run the full analysis automatically.
 
-| Mode | Setup Time | Data Coverage |
-|------|-----------|---------------|
-| **A. API auto-collect** (recommended) | ~10 min first time | Full GSC + GA4 data |
-| **B. Manual CSV export** | None | Whatever you export |
-| **C. Browser audit only** | None | Technical audit only |
+### Data Collection Modes
 
-### Mode A: API Setup
+| Mode | Setup | Best For |
+|------|-------|----------|
+| **API auto-collect** (recommended) | Google Cloud Service Account (~10 min first time) | Full analysis with all data |
+| **Manual CSV export** | None | Quick analysis with exported data |
+| **Browser audit only** | None | Technical SEO/GEO audit without analytics data |
 
-Requires a Google Cloud Service Account with access to both GSC and GA4.
+### API Setup (Mode A)
 
-1. **Create a Google Cloud project** and enable these APIs:
-   - Google Search Console API
-   - Google Analytics Data API
-   - PageSpeed Insights API
+1. Create a Google Cloud project, enable **Search Console API**, **Analytics Data API**, and **PageSpeed Insights API**
+2. Create a Service Account and download the JSON key
+3. Grant access: add the SA email as viewer in both GSC and GA4
+4. Tell the agent your key file path, GSC site URL, and GA4 Property ID
 
-2. **Create a Service Account**, download the JSON key file
+> **Tip**: GSC has two property types — Domain (`sc-domain:example.com`) and URL-prefix (`https://example.com`). Using the wrong format causes a 403 error.
 
-3. **Grant access**:
-   - In GSC: Settings → Users → Add the SA email as "Restricted" user
-   - In GA4: Admin → Property Access → Add the SA email as "Viewer"
+See [references/gsc-api-guide.md](skills/google-analytics-and-search-improve/references/gsc-api-guide.md) for detailed setup instructions.
 
-4. **Provide config** to the AI agent:
-   - JSON key file path (absolute path)
-   - GSC site URL — use `sc-domain:example.com` for Domain properties or `https://example.com` for URL-prefix properties
-   - GA4 Property ID (numeric)
-
-> **Important**: GSC has two property types. Using the wrong format causes a 403 error. Check the property selector in [Search Console](https://search.google.com/search-console/) — if it shows a bare domain, use `sc-domain:` prefix.
-
-See [references/gsc-api-guide.md](skills/google-analytics-and-search-improve/references/gsc-api-guide.md) for step-by-step instructions.
-
-## Project Structure
+## Analysis Workflow
 
 ```
-.
-├── skills/google-analytics-and-search-improve/
-│   ├── SKILL.md                          # Skill definition & workflow
-│   ├── scripts/
-│   │   ├── gsc_query.py                  # GSC Search Analytics, Sitemaps, URL Inspect
-│   │   ├── ga4_query.py                  # GA4 with 8 preset query templates
-│   │   └── requirements.txt              # google-api-python-client, google-analytics-data, etc.
-│   └── references/
-│       ├── gsc-api-guide.md              # Auth setup, script usage, dimensions
-│       ├── ga4-api-guide.md              # Auth setup, presets, metrics reference
-│       └── metrics-glossary.md           # Thresholds, diagnostic criteria, priority matrix
-├── .skills-data/                         # Runtime data (gitignored)
-│   └── google-analytics-and-search-improve/
-│       ├── .env                          # Credentials & config
-│       ├── data/                         # Collected JSON/CSV data & reports
-│       ├── tmp/                          # Screenshots
-│       ├── cache/                        # API response cache
-│       └── venv/                         # Python virtual environment
-└── .gitignore
+Phase 0  →  Website reconnaissance & goal definition
+Phase 1  →  Data collection (API / CSV / browser-only)
+Phase 2  →  Search performance analysis (GSC)
+Phase 3  →  User behavior analysis (GA4)
+Phase 3b →  Funnel exploration (optional, custom events)
+Phase 4  →  Live site audit (performance, SEO, security)
+Phase 5  →  Source code review (optional)
+Phase 5b →  SEO & GEO optimization checklist
+Phase 6  →  Goal-aligned improvement report with charts
 ```
 
 ## Output
 
-The skill generates a comprehensive improvement report at `.skills-data/google-analytics-and-search-improve/data/improvement-report.md` containing:
+The skill generates a full set of analysis reports and charts in `.skills-data/google-analytics-and-search-improve/`:
 
-- **Data overview** — key metrics summary with current values and trends
-- **Prioritized action items** (P0 urgent → P3 low priority) — each with data evidence, specific fix, and expected impact
-- **Detailed analysis** — organized by the 6 dimensions
-- **Execution roadmap** — week-by-week implementation plan
+- **`analysis/improvement-report.md`** — Final report with executive summary, goal achievement status, P0-P3 prioritized actions, and execution roadmap
+- **`analysis/`** — Phase-by-phase detailed reports (search analysis, behavior analysis, funnel analysis, site audit, SEO/GEO checklist)
+- **`charts/`** — Data visualization charts (PNG) embedded in reports
 
 ## Companion Skills
 
