@@ -355,9 +355,9 @@ Configuration required from user (write to `$DATA_DIR/.env` after collection):
 | Variable | Description |
 |----------|-------------|
 | `SITE_URL` | Website URL to audit (e.g., `https://example.com`) |
-| `GOOGLE_APPLICATION_CREDENTIALS` | **Absolute path** to the Service Account JSON key file on your machine |
 | `GSC_SITE_URL` | Site address in Search Console (see format note below) |
 | `GA4_PROPERTY_ID` | GA4 Property ID (numeric only) |
+| `BING_WEBMASTER_API_KEY` | (Optional) Bing Webmaster Tools API key for Bing search data |
 | `SOURCE_CODE_PATH` | (Optional) Path to the project source code |
 | `PSI_API_KEY` | (Optional) PageSpeed Insights API Key to avoid rate limiting |
 
@@ -375,15 +375,17 @@ Detailed auth setup steps in [references/gsc-api-guide.md](references/gsc-api-gu
 ```bash
 cat > "$DATA_DIR/.env" <<EOF
 SITE_URL=provided by user
-GOOGLE_APPLICATION_CREDENTIALS=provided by user (absolute path)
 GSC_SITE_URL=provided by user (note sc-domain: or https:// format)
 GA4_PROPERTY_ID=provided by user
+BING_WEBMASTER_API_KEY=provided by user (optional, for Bing search data)
 SOURCE_CODE_PATH=provided by user
 PSI_API_KEY=
 EOF
 ```
 
-**Collect data** (scripts auto-read auth from .env):
+**Google Service Account credentials**: Place the Service Account JSON key file in `$DATA_DIR/configs/`. All scripts (`gsc_query.py`, `ga4_query.py`, `ga4_funnel.py`) auto-discover the `*.json` key file from this directory — no need to configure the path in `.env`. If multiple JSON files exist, the first one (alphabetically) is used.
+
+**Collect data** (scripts auto-read auth from .env and configs/):
 ```bash
 set -a; source "$DATA_DIR/.env"; set +a
 python scripts/gsc_query.py --dimensions query --limit 500 -o "$DATA_DIR/data/gsc_queries.json"
@@ -401,6 +403,13 @@ python scripts/ga4_query.py --preset conversion_events -o "$DATA_DIR/data/ga4_co
 
 # Optional: funnel exploration (if user has custom events for funnel analysis)
 # python scripts/ga4_funnel.py --steps "event1,event2,event3" -o "$DATA_DIR/analysis/ga4_funnel.json"
+
+# Optional: Bing Webmaster data (if BING_WEBMASTER_API_KEY is configured)
+# python scripts/bing_query.py --mode query_stats -o "$DATA_DIR/data/bing_queries.json"
+# python scripts/bing_query.py --mode page_stats -o "$DATA_DIR/data/bing_pages.json"
+# python scripts/bing_query.py --mode rank_traffic -o "$DATA_DIR/data/bing_traffic.json"
+# python scripts/bing_query.py --mode links -o "$DATA_DIR/data/bing_links.json"
+# python scripts/bing_query.py --mode crawl_stats -o "$DATA_DIR/data/bing_crawl.json"
 ```
 
 First-time use requires installing dependencies:
@@ -409,7 +418,7 @@ python3 -m venv "$DATA_DIR/venv" && source "$DATA_DIR/venv/bin/activate"
 pip install -r scripts/requirements.txt
 ```
 
-Script usage details in [references/gsc-api-guide.md](references/gsc-api-guide.md) and [references/ga4-api-guide.md](references/ga4-api-guide.md).
+Script usage details in [references/gsc-api-guide.md](references/gsc-api-guide.md), [references/ga4-api-guide.md](references/ga4-api-guide.md), and [references/bing-webmaster-api-guide.md](references/bing-webmaster-api-guide.md).
 
 ---
 
@@ -510,6 +519,44 @@ Use [scripts/gsc_query.py](scripts/gsc_query.py) for standard dimension/date que
 5. **Regex-based pattern matching**: Use `includingRegex` operator to match complex URL or query patterns across the site
 
 **Integration with the analysis workflow**: Save custom query output to `$DATA_DIR/data/gsc_*.json` and reference it in Phase 2 analysis or directly in the Phase 6 improvement report. Custom query data supplements (not replaces) the standard data collection.
+
+#### Bing Webmaster Data Analysis (Optional)
+
+When `BING_WEBMASTER_API_KEY` is configured in `.env`, include Bing search data in the analysis. This is especially important when Bing is a significant traffic source (check GA4 acquisition data for Bing's share).
+
+**Collect Bing data** (if not already done in Phase 1):
+```bash
+set -a; source "$DATA_DIR/.env"; set +a
+python scripts/bing_query.py --mode query_stats -o "$DATA_DIR/data/bing_queries.json"
+python scripts/bing_query.py --mode page_stats -o "$DATA_DIR/data/bing_pages.json"
+python scripts/bing_query.py --mode rank_traffic -o "$DATA_DIR/data/bing_traffic.json"
+python scripts/bing_query.py --mode links -o "$DATA_DIR/data/bing_links.json"
+```
+
+**Bing-specific analysis approach**:
+
+1. **Cross-engine comparison**: Compare Bing query/page performance with GSC data to identify:
+   - Queries where the site ranks well on Bing but poorly on Google (or vice versa) — these reveal search engine-specific optimization opportunities
+   - Pages with disproportionate Bing vs Google traffic — may indicate content preferences or algorithmic differences
+   - Overall traffic distribution across search engines (from GA4 acquisition data)
+
+2. **Bing-unique insights** (capabilities GSC doesn't have):
+   - **Keyword research**: Use `keyword` and `related_keywords` modes to discover keyword volume and expansion opportunities on Bing
+   - **Backlink analysis**: Use `links` mode to review inbound link profile as seen by Bing
+   - **Crawl health**: Use `crawl_stats` mode to monitor Bing's crawl frequency and identify crawl issues
+
+3. **Deep-dive into specific queries or pages**:
+   - Use `query_detail` mode to get detailed stats for a high-value query
+   - Use `page_detail` mode to see all queries driving Bing traffic to a key page
+   - Use `query_page_detail` mode for granular query + page combination analysis
+
+**Output**: Include Bing analysis as a subsection in `$DATA_DIR/analysis/gsc_analysis.md` (under a "## Bing Search Performance" heading), or as a separate file `$DATA_DIR/analysis/bing_analysis.md` if Bing is a major traffic source.
+
+**Charts**: Generate Bing-specific charts (e.g., `bing_top_queries.png`, `bing_traffic_trend.png`, `bing_vs_google.png`) and save to `$DATA_DIR/charts/bing_*.png`.
+
+> **Data retention warning**: Bing only retains 6 months of data. If historical comparison is needed, set up regular data collection (e.g., monthly) to build your own data archive.
+
+Script details in [references/bing-webmaster-api-guide.md](references/bing-webmaster-api-guide.md).
 
 ---
 
@@ -826,5 +873,6 @@ Save the report to `$DATA_DIR/analysis/improvement-report.md`.
 | [references/gsc-api-guide.md](references/gsc-api-guide.md) | GSC auth setup (step-by-step), script usage, dimensions & metrics |
 | [references/ga4-api-guide.md](references/ga4-api-guide.md) | GA4 auth setup, preset templates, dimensions & metrics |
 | [references/ga4-exploration-api-guide.md](references/ga4-exploration-api-guide.md) | GA4 Exploration API coverage, funnel exploration script usage, JSON config format, output format |
+| [references/bing-webmaster-api-guide.md](references/bing-webmaster-api-guide.md) | Bing Webmaster API auth setup, script usage, modes & metrics, GSC comparison, keyword research |
 | [references/metrics-glossary.md](references/metrics-glossary.md) | Six analysis dimensions: thresholds, diagnostics, priority matrix |
 | [references/SEO-GEO-Optimization-Checklist.md](references/SEO-GEO-Optimization-Checklist.md) | SEO & GEO optimization checklist: structured data, AI readability, content depth, technical SEO, performance, off-page authority, detection commands, priority matrix |

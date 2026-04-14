@@ -11,7 +11,8 @@ Usage:
         --inspect-url "https://example.com/page"
 
 Reads .env from: .skills-data/google-analytics-and-search-improve/.env
-Env vars: GOOGLE_APPLICATION_CREDENTIALS, GSC_SITE_URL
+Env vars: GSC_SITE_URL
+Credentials: auto-discovered from .skills-data/google-analytics-and-search-improve/configs/*.json
 """
 
 import argparse
@@ -25,28 +26,50 @@ from dotenv import load_dotenv
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 
-def _find_env():
-    """Walk up from script dir to find .skills-data/.../. env at project root."""
+
+def _find_data_dir():
+    """Walk up from script dir to find .skills-data/google-analytics-and-search-improve/."""
     d = Path(__file__).resolve().parent
     while d != d.parent:
-        candidate = d / ".skills-data" / "google-analytics-and-search-improve" / ".env"
-        if candidate.exists():
+        candidate = d / ".skills-data" / "google-analytics-and-search-improve"
+        if candidate.is_dir():
             return candidate
         d = d.parent
     return None
 
-_env_path = _find_env()
-if _env_path:
-    load_dotenv(_env_path)
+
+_data_dir = _find_data_dir()
+if _data_dir:
+    env_path = _data_dir / ".env"
+    if env_path.exists():
+        load_dotenv(env_path)
+
+
+def _find_credentials():
+    """Auto-discover Service Account JSON key from configs/ directory."""
+    # 1. Explicit env var takes priority (backward compatible)
+    explicit = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
+    if explicit and Path(explicit).is_file():
+        return explicit
+    # 2. Auto-discover from configs/ directory
+    if _data_dir:
+        configs_dir = _data_dir / "configs"
+        if configs_dir.is_dir():
+            json_files = sorted(configs_dir.glob("*.json"))
+            if json_files:
+                # Set env var so GA4 client libs also pick it up
+                os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = str(json_files[0])
+                return str(json_files[0])
+    return None
 
 
 SCOPES = ["https://www.googleapis.com/auth/webmasters.readonly"]
 
 
 def get_credentials():
-    creds_path = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
+    creds_path = _find_credentials()
     if not creds_path:
-        print("Error: GOOGLE_APPLICATION_CREDENTIALS not set", file=sys.stderr)
+        print("Error: No Service Account JSON key found in configs/ directory", file=sys.stderr)
         sys.exit(1)
     return service_account.Credentials.from_service_account_file(
         creds_path, scopes=SCOPES

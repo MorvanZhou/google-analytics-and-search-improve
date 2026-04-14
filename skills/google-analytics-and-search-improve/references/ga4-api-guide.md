@@ -25,11 +25,11 @@ Write the following value to `$DATA_DIR/.env` (scripts will auto-load):
 GA4_PROPERTY_ID=123456789
 ```
 
-`GOOGLE_APPLICATION_CREDENTIALS` was already written during GSC configuration. GA4 shares the same key file — no need to repeat it.
+`GOOGLE_APPLICATION_CREDENTIALS` was already placed in `$DATA_DIR/configs/` during GSC configuration. GA4 shares the same key file — scripts auto-discover it from the `configs/` directory.
 
 ## Script Usage
 
-Scripts auto-read `GOOGLE_APPLICATION_CREDENTIALS` and `GA4_PROPERTY_ID` from `$DATA_DIR/.env`. Once `.env` is configured, you don't need to pass these values on the command line.
+Scripts auto-read `GA4_PROPERTY_ID` from `$DATA_DIR/.env` and auto-discover the Service Account JSON key from `$DATA_DIR/configs/`. Once configured, you don't need to pass these values on the command line.
 
 ### Preset Query Templates
 

@@ -20,7 +20,7 @@ GA4's "Explore" section in the web UI offers several exploration types. Their AP
 
 Funnel reports use the **same Service Account** as `ga4_query.py`. No additional setup is needed if you have already configured:
 
-- `GOOGLE_APPLICATION_CREDENTIALS` — path to Service Account JSON key
+- Service Account JSON key in `$DATA_DIR/configs/` (auto-discovered)
 - `GA4_PROPERTY_ID` — your GA4 property ID
 
 Both are read from `$DATA_DIR/.env`.

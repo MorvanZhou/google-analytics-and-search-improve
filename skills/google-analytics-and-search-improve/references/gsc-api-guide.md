@@ -42,20 +42,25 @@ GSC has two property types, and the `GSC_SITE_URL` value must match the actual t
 
 Using the wrong format will cause the API to return a 403 permission error.
 
-### Step 5: Write to .env
+### Step 5: Place JSON Key in configs/
+
+Place the downloaded JSON key file in `$DATA_DIR/configs/`. All scripts auto-discover the `*.json` key from this directory — no manual path configuration needed.
+
+```bash
+cp /path/to/downloaded/my-site-analytics-xxxx.json "$DATA_DIR/configs/"
+```
+
+### Step 6: Write to .env
 
 Write the following values to `$DATA_DIR/.env` (scripts will auto-load):
 
 ```
-GOOGLE_APPLICATION_CREDENTIALS=/absolute/path/on/your/machine/my-site-analytics-xxxx.json
 GSC_SITE_URL=sc-domain:example.com
 ```
 
-> **Note**: `GOOGLE_APPLICATION_CREDENTIALS` should use an **absolute path**. Relative paths may fail to locate the key file when running from different working directories.
-
 ## Script Usage
 
-Scripts auto-read `GOOGLE_APPLICATION_CREDENTIALS` and `GSC_SITE_URL` from `$DATA_DIR/.env`. Once `.env` is configured, you don't need to pass these values on the command line.
+Scripts auto-read `GSC_SITE_URL` from `$DATA_DIR/.env` and auto-discover the Service Account JSON key from `$DATA_DIR/configs/`. Once configured, you don't need to pass these values on the command line.
 
 ### Search Analytics Queries
 
