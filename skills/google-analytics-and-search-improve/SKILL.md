@@ -482,6 +482,35 @@ Analyze according to the "SEO" dimension thresholds in [references/metrics-gloss
 
 **Charts**: Generate all Phase 2 required charts (see [Data Visualization → Required Charts per Phase](#required-charts-per-phase)) by writing and executing a Python script. Save chart PNGs to `$DATA_DIR/charts/gsc_*.png` and embed them in the analysis report using relative paths (`../charts/gsc_*.png`).
 
+#### Custom GSC Queries for Targeted Analysis
+
+Beyond the standard Phase 1 data collection, GSC can serve as a powerful auxiliary analysis tool for deeper investigation. When the standard aggregated data is insufficient, write targeted queries to drill down into specific page sections, track daily trends for particular queries, or cross-filter dimensions.
+
+**When to use custom GSC queries**:
+- Standard Phase 1/Phase 2 data reveals an area that needs deeper investigation (e.g., a page group with anomalous metrics)
+- The user asks about a specific subset of pages or queries (e.g., "How are my /3d/ tool pages performing in search?")
+- You need to filter, segment, or cross-reference dimensions that the standard data collection didn't cover
+
+**How to build custom queries**:
+
+Use [scripts/gsc_query.py](scripts/gsc_query.py) for standard dimension/date queries. For advanced filtering (e.g., `dimensionFilterGroups`), write a custom script following the GSC Search Analytics API patterns documented in [references/gsc-api-guide.md](references/gsc-api-guide.md). Key capabilities:
+
+- **Dimension filtering**: Filter results by any dimension — page path patterns, query keywords, country, device — using operators like `contains`, `equals`, `includingRegex`, etc.
+- **Cross-dimension filtering**: Filter on a dimension that is not in the `dimensions` list (e.g., group by `query` + `date` while filtering on `page`)
+- **Fresh data access**: Use `dataState: 'all'` to include preliminary data from the last 1-2 days for near-real-time monitoring
+- **Pagination**: Retrieve up to 25,000 rows per request; paginate with `startRow` for larger datasets
+- **Multi-condition filters**: Combine multiple filters within a group using AND logic
+
+**Common analysis scenarios**:
+
+1. **Section-specific analysis**: Filter by page path to isolate a site section (e.g., `/blog/`, `/tools/`, `/docs/`) and analyze its search performance independently
+2. **Query trend tracking**: Group by `query` + `date` with a page filter to track daily performance trends for queries landing on specific pages
+3. **Long-tail keyword discovery**: Query with high `rowLimit` to surface long-tail queries you rank for but may not appear in the top-level aggregation
+4. **Country-specific page performance**: Filter by country and group by page to find geo-specific ranking opportunities
+5. **Regex-based pattern matching**: Use `includingRegex` operator to match complex URL or query patterns across the site
+
+**Integration with the analysis workflow**: Save custom query output to `$DATA_DIR/data/gsc_*.json` and reference it in Phase 2 analysis or directly in the Phase 6 improvement report. Custom query data supplements (not replaces) the standard data collection.
+
 ---
 
 ### Phase 3: GA4 Data Analysis (Goal-Aligned)
