@@ -19,14 +19,26 @@ matplotlib.use('Agg')  # Non-interactive backend, MUST be set before importing p
 import matplotlib.pyplot as plt
 import json
 import os
+import platform
 
 # ── Configuration ──────────────────────────────────────────
 DATA_DIR = os.environ.get("DATA_DIR", ".skills-data/google-analytics-and-search-improve")
 CHARTS_DIR = os.path.join(DATA_DIR, "charts")
 os.makedirs(CHARTS_DIR, exist_ok=True)
 
+# ── CJK font support (Chinese / Japanese / Korean) ────────
+_system = platform.system()
+if _system == "Darwin":
+    _cjk_fonts = ["Arial Unicode MS", "PingFang SC", "Heiti SC", "STHeiti"]
+elif _system == "Linux":
+    _cjk_fonts = ["WenQuanYi Micro Hei", "Noto Sans CJK SC", "DejaVu Sans"]
+else:  # Windows
+    _cjk_fonts = ["Microsoft YaHei", "SimHei", "SimSun"]
+
 # ── Style defaults ─────────────────────────────────────────
 plt.rcParams.update({
+    "font.sans-serif": _cjk_fonts,
+    "axes.unicode_minus": False,     # Fix minus sign rendering with CJK fonts
     "figure.figsize": (10, 6),
     "figure.dpi": 150,
     "axes.titlesize": 14,
@@ -121,21 +133,16 @@ print(f"Chart saved: {output_path}")
 
 ## CJK Font Support
 
-When the site content or data contains Chinese/Japanese/Korean characters, configure matplotlib to use a CJK-compatible font:
+> **Note**: The standard pattern template above already includes CJK font auto-detection. You do NOT need to add it separately — it is built into the `plt.rcParams` block. The logic below is kept for reference only.
 
+When the site content or data contains Chinese/Japanese/Korean characters, matplotlib needs a CJK-compatible font. The standard template handles this automatically via `platform.system()` detection:
+
+- **macOS (Darwin)**: Arial Unicode MS → PingFang SC → Heiti SC → STHeiti
+- **Linux**: WenQuanYi Micro Hei → Noto Sans CJK SC → DejaVu Sans
+- **Windows**: Microsoft YaHei → SimHei → SimSun
+
+Key `rcParams` that must be set:
 ```python
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-import platform
-
-# Auto-detect system CJK font
-system = platform.system()
-if system == "Darwin":
-    plt.rcParams["font.sans-serif"] = ["Arial Unicode MS", "PingFang SC", "Heiti SC", "STHeiti"]
-elif system == "Linux":
-    plt.rcParams["font.sans-serif"] = ["WenQuanYi Micro Hei", "Noto Sans CJK SC", "DejaVu Sans"]
-else:  # Windows
-    plt.rcParams["font.sans-serif"] = ["Microsoft YaHei", "SimHei", "SimSun"]
-plt.rcParams["axes.unicode_minus"] = False  # Fix minus sign rendering
+plt.rcParams["font.sans-serif"] = ["PingFang SC", ...]  # CJK-capable font list
+plt.rcParams["axes.unicode_minus"] = False               # Fix minus sign rendering
 ```
