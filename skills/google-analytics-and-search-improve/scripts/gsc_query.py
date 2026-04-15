@@ -19,8 +19,14 @@ import argparse
 import json
 import os
 import sys
+import warnings
 from datetime import datetime, timedelta
 from pathlib import Path
+
+# Suppress FutureWarning (Python 3.9 EOL notices from google libs)
+# and NotOpenSSLWarning (urllib3 v2 + LibreSSL) so they don't pollute output.
+warnings.filterwarnings("ignore", category=FutureWarning)
+warnings.filterwarnings("ignore", message=".*urllib3.*OpenSSL.*")
 
 from dotenv import load_dotenv
 from google.oauth2 import service_account

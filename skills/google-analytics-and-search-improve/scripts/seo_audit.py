@@ -26,9 +26,15 @@ import os
 import re
 import sys
 import time
+import warnings
 from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import urljoin, urlparse
+
+# Suppress FutureWarning (Python 3.9 EOL notices from google libs)
+# and NotOpenSSLWarning (urllib3 v2 + LibreSSL) so they don't pollute output.
+warnings.filterwarnings("ignore", category=FutureWarning)
+warnings.filterwarnings("ignore", message=".*urllib3.*OpenSSL.*")
 
 from dotenv import load_dotenv
 
