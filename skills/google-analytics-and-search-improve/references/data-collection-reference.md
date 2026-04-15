@@ -309,7 +309,7 @@ python scripts/ga4_query.py \
     --dimensions pagePath,deviceCategory \
     --metrics sessions,bounceRate,averageSessionDuration \
     --start-date 2025-01-01 --end-date 2025-03-01 \
-    --order-by -sessions --limit 200
+    --order-by "-sessions" --limit 200
 ```
 
 ### Date Formats
