@@ -34,7 +34,7 @@ GSC and GA4 share the same Google Service Account. Create it once to use for bot
 cp /path/to/downloaded/my-site-analytics-xxxx.json "$DATA_DIR/configs/"
 ```
 
-All scripts (`gsc_query.py`, `ga4_query.py`, `ga4_funnel.py`) auto-discover the `*.json` key file from `$DATA_DIR/configs/` — no need to configure the path in `.env`. If multiple JSON files exist, the first one (alphabetically) is used.
+All scripts (`gsc_query.py`, `ga4_query.py`, `ga4_funnel.py`) auto-discover the `*.json` key file from `$DATA_DIR/configs/` via the shared `utils.py` module — no need to configure the path in `.env` or set `GOOGLE_APPLICATION_CREDENTIALS`. If multiple JSON files exist, the first one (alphabetically) is used.
 
 ### Step 4: Authorize in Search Console (for GSC)
 

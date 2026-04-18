@@ -114,7 +114,7 @@ mkdir -p "$DATA_DIR"/{data,analysis,charts,scripts,cache,logs,tmp}
 | **B. Manual CSV export** | User exports CSV from GA4/GSC web consoles | Zero config, simplest |
 | **C. Browser audit only** | Visit site directly, no GA4/GSC data | Quick technical checks |
 
-**Mode A**: Check `$DATA_DIR/.env` for required config. If missing, guide user to fill in `SITE_URL`, `GSC_SITE_URL`, `GA4_PROPERTY_ID`. Place Service Account JSON key in `$DATA_DIR/configs/`. Run collection scripts to save data to `$DATA_DIR/data/`.
+**Mode A**: Check `$DATA_DIR/.env` for required config. If missing, guide user to fill in `SITE_URL`, `GSC_SITE_URL`, `GA4_PROPERTY_ID`. Place Service Account JSON key in `$DATA_DIR/configs/` (scripts auto-discover it via `utils.py`). Run collection scripts to save data to `$DATA_DIR/data/`.
 
 **Mode B**: Send export instructions to user. After receiving CSV files in `$DATA_DIR/data/`, proceed to Phase 2-3.
 
