@@ -11,7 +11,7 @@ Usage:
         --dimensions pagePath,deviceCategory \
         --metrics sessions,bounceRate \
         --start-date 30daysAgo --end-date yesterday \
-        --order-by "-sessions"
+        --order-by="-sessions"
 
 Reads .env from: .skills-data/google-analytics-and-search-improve/.env
 Env vars: GA4_PROPERTY_ID
@@ -210,7 +210,7 @@ def main():
     parser.add_argument("--end-date", default="yesterday")
     parser.add_argument("--limit", type=int, default=1000)
     parser.add_argument("--order-by",
-                        help='Metric to order by (prefix with - for desc; quote in shell: --order-by "-sessions")')
+                        help='Metric to order by (prefix with - for desc; quote in shell: --order-by="-sessions")')
     parser.add_argument("--output", "-o", help="Output file path (default: stdout)")
 
     args = parser.parse_args()
