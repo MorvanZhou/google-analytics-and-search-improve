@@ -88,6 +88,44 @@ PRESETS = {
         "metrics": ["eventCount", "totalUsers", "conversions"],
         "order_by": "-eventCount",
     },
+    # ── User Persona Presets ──────────────────────────────────
+    "demographics_age": {
+        "dimensions": ["userAgeBracket"],
+        "metrics": ["totalUsers", "sessions", "bounceRate",
+                     "engagementRate", "averageSessionDuration", "conversions"],
+        "order_by": "-totalUsers",
+    },
+    "demographics_gender": {
+        "dimensions": ["userGender"],
+        "metrics": ["totalUsers", "sessions", "bounceRate",
+                     "engagementRate", "averageSessionDuration", "conversions"],
+        "order_by": "-totalUsers",
+    },
+    "demographics_geo": {
+        "dimensions": ["country", "city"],
+        "metrics": ["totalUsers", "sessions", "bounceRate",
+                     "engagementRate", "conversions"],
+        "order_by": "-totalUsers",
+    },
+    "demographics_language": {
+        "dimensions": ["language"],
+        "metrics": ["totalUsers", "sessions", "bounceRate",
+                     "engagementRate"],
+        "order_by": "-totalUsers",
+    },
+    "demographics_interests": {
+        "dimensions": ["brandingInterest"],
+        "metrics": ["totalUsers", "sessions", "bounceRate",
+                     "engagementRate", "conversions"],
+        "order_by": "-totalUsers",
+    },
+    "new_vs_returning": {
+        "dimensions": ["newVsReturning"],
+        "metrics": ["totalUsers", "sessions", "sessionsPerUser",
+                     "bounceRate", "engagementRate", "averageSessionDuration",
+                     "screenPageViewsPerSession", "conversions"],
+        "order_by": "-totalUsers",
+    },
 }
 
 
