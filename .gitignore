@@ -11,6 +11,8 @@ build/
 # Virtual environments
 venv/
 .venv/
+skills/google-analytics-and-search-improve/scripts/.venv/
+skills/google-analytics-and-search-improve/scripts/uv.lock
 
 # OS
 .DS_Store
